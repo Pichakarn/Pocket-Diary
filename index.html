@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pocket Diary - สมุดบันทึกฮีลใจ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #f7ebed 50%, #e8f4f8 100%);
+        }
+        /* ดีไซน์ช่องกรอกข้อมูลแบบโปร่งแสง นุ่มนวล สบายตา */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 182, 193, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #f472b6;
+            box-shadow: 0 0 0 4px rgba(244, 114, 182, 0.15);
+        }
+        /* ดีไซน์หน้าหลักแบบไร้กรอบบีบอัด */
+        .journal-container {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 50px rgba(216, 180, 204, 0.2);
+        }
+        .phone-modal {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 relative overflow-x-hidden text-gray-700">
+
+    <!-- ========================================== -->
+    <!-- ส่วนที่ 1: หน้า Login / Register -->
+    <!-- ========================================== -->
+    <div id="auth-section" class="min-h-screen w-full flex items-center justify-center absolute inset-0 z-20 bg-gradient-to-br from-[#fdfbfb] via-[#f7ebed] to-[#e8f4f8] px-4">
+        <div class="w-full max-w-sm flex flex-col items-center py-8">
+            
+            <!-- ไอคอนโลโก้ด้านบนสุด -->
+            <div class="w-20 h-20 rounded-3xl bg-white/80 shadow-lg shadow-pink-100/60 flex items-center justify-center text-pink-500 text-4xl mb-5 border border-pink-100 transform hover:scale-105 transition duration-300">
+                📖
+            </div>
+
+            <!-- หัวข้อหลัก -->
+            <h1 id="form-title" class="text-2xl font-bold text-gray-800 tracking-wide mb-1">เข้าสู่ระบบ</h1>
+            <p class="text-gray-400 text-xs text-center mb-8">สมุดบันทึกความทรงจำและกาชาฮีลใจส่วนตัวของคุณ</p>
+
+            <!-- ฟอร์มกรอกข้อมูล -->
+            <form id="auth-form" class="w-full space-y-4">
+                <div>
+                    <label class="block text-gray-500 text-xs font-medium mb-2 tracking-wider">อีเมล (Email)</label>
+                    <input type="email" id="email" required 
+                        class="w-full px-4 py-3.5 glass-input rounded-2xl focus:outline-none text-gray-700 text-sm placeholder-gray-300"
+                        placeholder="name@example.com">
+                </div>
+
+                <div>
+                    <label class="block text-gray-500 text-xs font-medium mb-2 tracking-wider">รหัสผ่าน (Password)</label>
+                    <input type="password" id="password" required minlength="6"
+                        class="w-full px-4 py-3.5 glass-input rounded-2xl focus:outline-none text-gray-700 text-sm placeholder-gray-300"
+                        placeholder="อย่างน้อย 6 ตัวอักษร">
+                </div>
+
+                <div class="pt-3">
+                    <button type="submit" id="submit-btn"
+                        class="w-full py-3.5 bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white font-medium text-sm rounded-2xl transition duration-300 shadow-lg shadow-pink-300/40 cursor-pointer active:scale-98">
+                        เข้าสู่ระบบ
+                    </button>
+                </div>
+            </form>
+
+            <!-- ปุ่มสลับโหมด -->
+            <div class="mt-8 text-center text-xs text-gray-400">
+                <span id="toggle-text">ยังไม่มีบัญชีใช่ไหม?</span> 
+                <button type="button" id="toggle-mode-btn" class="text-pink-500 font-semibold hover:underline ml-1 cursor-pointer">สมัครสมาชิก</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- ส่วนที่ 2: หน้าหลัก Main Home (แสดงหลังล็อกอินแล้ว) -->
+    <!-- ========================================== -->
+    <div id="main-section" class="w-full min-h-screen flex flex-col justify-between items-center hidden z-10 py-2">
+        
+        <!-- แถบด้านบน: ข้อมูลผู้เล่น & ปุ่มออกจากระบบ -->
+        <div class="w-full max-w-4xl flex justify-between items-center bg-white/70 backdrop-blur-xl px-6 py-3.5 rounded-2xl border border-pink-100/80 shadow-sm mt-2">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-500 font-bold shadow-inner">
+                    📖
+                </div>
+                <div>
+                    <h2 id="user-email-display" class="text-xs font-semibold text-gray-700">กำลังโหลด...</h2>
+                    <span id="user-role-badge" class="inline-block px-2 py-0.5 text-[10px] rounded-full bg-pink-100 text-pink-600 font-medium">ผู้เล่นทั่วไป</span>
+                </div>
+            </div>
+            <button id="logout-btn" class="px-4 py-1.5 bg-gray-50 hover:bg-red-50 hover:text-red-500 text-gray-500 text-xs font-medium rounded-xl transition cursor-pointer border border-gray-100">
+                ออกจากระบบ
+            </button>
+        </div>
+
+        <!-- สมุดบันทึกหลัก -->
+        <main class="w-full max-w-4xl my-auto py-8 flex flex-col items-center text-center px-4">
+            <div class="journal-container w-full max-w-xl rounded-3xl p-8 relative">
+                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-pink-200 text-pink-700 text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    My Pocket Journal
+                </div>
+                
+                <h1 class="text-2xl font-bold text-gray-800 mt-3 mb-2">ยินดีต้อนรับสู่ Pocket Diary ✨</h1>
+                <p class="text-gray-400 text-xs mb-8">เลือกเปิดสมุดภาพตัวละคร หรือกดที่ไอคอนมือถือด้านล่างเพื่อเข้าถึงฟีเจอร์อื่นๆ ได้เลย</p>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="alert('ฟีเจอร์สมุดภาพตัวละคร กำลังจะมาเร็วๆ นี้ค่า!')" class="p-5 rounded-2xl bg-white/60 hover:bg-white text-pink-600 font-medium text-sm transition duration-300 flex flex-col items-center justify-center space-y-2 cursor-pointer border border-pink-100/60 shadow-sm hover:shadow-md">
+                        <span class="text-3xl">📚</span>
+                        <span>สมุดภาพตัวละคร</span>
+                    </button>
+                    <button onclick="alert('ฟีเจอร์กาชาสกิน กำลังจะมาเร็วๆ นี้ค่า!')" class="p-5 rounded-2xl bg-white/60 hover:bg-white text-blue-600 font-medium text-sm transition duration-300 flex flex-col items-center justify-center space-y-2 cursor-pointer border border-blue-100/60 shadow-sm hover:shadow-md">
+                        <span class="text-3xl">🎁</span>
+                        <span>สุ่มกาชา (Gacha)</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- ไอคอนมือถือลอยได้มุมขวาล่าง -->
+        <div class="fixed bottom-6 right-6 z-40">
+            <button id="open-phone-btn" class="w-14 h-14 bg-gradient-to-tr from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-full shadow-lg shadow-pink-300/50 flex items-center justify-center text-2xl transition transform hover:scale-105 cursor-pointer">
+                📱
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: หน้าจอมือถือจำลอง -->
+    <div id="smartphone-modal" class="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50 transition-opacity">
+        <div class="phone-modal w-full max-w-xs h-[520px] rounded-[40px] border-8 border-gray-800 p-5 flex flex-col justify-between relative shadow-2xl overflow-hidden">
+            <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-20 h-4 bg-gray-800 rounded-full flex items-center justify-center">
+                <div class="w-2 h-2 bg-gray-700 rounded-full mr-2"></div>
+                <div class="w-8 h-1 bg-gray-700 rounded-full"></div>
+            </div>
+
+            <div class="flex justify-between items-center mt-4 px-2 text-xs text-gray-400 font-medium">
+                <span id="phone-time">12:00</span>
+                <span>PocketOS 📱</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 my-auto px-2 overflow-y-auto">
+                <button onclick="alert('เปิดห้องแชทกับเพื่อน')" class="flex flex-col items-center p-2 rounded-2xl hover:bg-pink-50 transition cursor-pointer">
+                    <div class="w-12 h-12 bg-pink-100 rounded-2xl flex items-center justify-center text-xl mb-1 shadow-sm">💬</div>
+                    <span class="text-[10px] text-gray-600">Chat</span>
+                </button>
+                <button onclick="alert('เปิดระบบธนาคาร')" class="flex flex-col items-center p-2 rounded-2xl hover:bg-green-50 transition cursor-pointer">
+                    <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-xl mb-1 shadow-sm">💳</div>
+                    <span class="text-[10px] text-gray-600">Bank</span>
+                </button>
+                <button onclick="alert('เปิดร้านค้าไอเทม')" class="flex flex-col items-center p-2 rounded-2xl hover:bg-yellow-50 transition cursor-pointer">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center text-xl mb-1 shadow-sm">🛒</div>
+                    <span class="text-[10px] text-gray-600">Shop</span>
+                </button>
+                <button onclick="alert('ใส่โค้ดรับรางวัล')" class="flex flex-col items-center p-2 rounded-2xl hover:bg-purple-50 transition cursor-pointer">
+                    <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-xl mb-1 shadow-sm">🎟️</div>
+                    <span class="text-[10px] text-gray-600">Code</span>
+                </button>
+
+                <!-- โหมดแอดมิน -->
+                <button id="admin-tool-app" onclick="alert('ยินดีต้อนรับสู่ระบบ Admin Tools')" class="flex flex-col items-center p-2 rounded-2xl hover:bg-red-50 transition cursor-pointer hidden">
+                    <div class="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-xl mb-1 shadow-sm">🛠️</div>
+                    <span class="text-[10px] text-red-500 font-bold">Admin</span>
+                </button>
+            </div>
+
+            <div class="text-center pt-2">
+                <button type="button" id="close-phone-btn" class="w-24 h-1.5 bg-gray-300 hover:bg-gray-400 rounded-full mx-auto transition cursor-pointer"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Popup แจ้งเตือนสุดน่ารัก (คงไว้ครบถ้วน) -->
+    <div id="custom-popup" class="fixed inset-0 bg-black/20 backdrop-blur-xs flex items-center justify-center p-4 hidden z-60 transition-opacity">
+        <div class="bg-white/95 border border-pink-100 w-full max-w-xs rounded-3xl p-6 text-center shadow-2xl transform scale-95 transition-transform" id="popup-box">
+            <div id="popup-icon" class="text-4xl mb-3">✨</div>
+            <h3 id="popup-title" class="font-bold text-gray-700 text-base mb-1">แจ้งเตือน</h3>
+            <p id="popup-message" class="text-gray-500 text-xs mb-5 leading-relaxed">ข้อความแจ้งเตือน...</p>
+            <button type="button" id="popup-close-btn" class="w-full py-2.5 bg-pink-100 hover:bg-pink-200 text-pink-600 font-semibold text-xs rounded-xl transition cursor-pointer">
+                ตกลง
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Script ควบคุมการเชื่อมต่อ Supabase & Popup สุดน่ารัก -->
+    <!-- ========================================== -->
+    <script type="module">
+        import { supabase } from './supabase-config.js';
+
+        const authSection = document.getElementById('auth-section');
+        const mainSection = document.getElementById('main-section');
+        const authForm = document.getElementById('auth-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submit-btn');
+        const formTitle = document.getElementById('form-title');
+        const toggleText = document.getElementById('toggle-text');
+        const toggleModeBtn = document.getElementById('toggle-mode-btn');
+
+        const userEmailDisplay = document.getElementById('user-email-display');
+        const userRoleBadge = document.getElementById('user-role-badge');
+        const logoutBtn = document.getElementById('logout-btn');
+        const openPhoneBtn = document.getElementById('open-phone-btn');
+        const smartphoneModal = document.getElementById('smartphone-modal');
+        const closePhoneBtn = document.getElementById('close-phone-btn');
+        const adminToolApp = document.getElementById('admin-tool-app');
+
+        const popup = document.getElementById('custom-popup');
+        const popupBox = document.getElementById('popup-box');
+        const popupIcon = document.getElementById('popup-icon');
+        const popupTitle = document.getElementById('popup-title');
+        const popupMessage = document.getElementById('popup-message');
+        const popupCloseBtn = document.getElementById('popup-close-btn');
+
+        let isRegisterMode = false;
+        let onPopupCloseCallback = null;
+
+        function showPopup(icon, title, message, callback = null) {
+            popupIcon.textContent = icon;
+            popupTitle.textContent = title;
+            popupMessage.textContent = message;
+            onPopupCloseCallback = callback;
+
+            popup.classList.remove('hidden');
+            setTimeout(() => {
+                popupBox.classList.remove('scale-95');
+                popupBox.classList.add('scale-100');
+            }, 10);
+        }
+
+        function hidePopup() {
+            popupBox.classList.remove('scale-100');
+            popupBox.classList.add('scale-95');
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                if (onPopupCloseCallback) {
+                    onPopupCloseCallback();
+                    onPopupCloseCallback = null;
+                }
+            }, 120);
+        }
+
+        popupCloseBtn.addEventListener('click', hidePopup);
+
+        // ตรวจสอบสถานะการเข้าสู่ระบบตอนเปิดเว็บ (ผ่าน Supabase Session)
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && session.user) {
+                const email = session.user.email;
+                authSection.classList.add('hidden');
+                mainSection.classList.remove('hidden');
+                setupMainPage(email);
+            } else {
+                authSection.classList.remove('hidden');
+                mainSection.classList.add('hidden');
+            }
+        }
+        checkSession();
+
+        // ตั้งค่าหน้าหลักและสิทธิ์แอดมิน
+        function setupMainPage(email) {
+            userEmailDisplay.textContent = email;
+            const isAdminEmail = (email === 'ciiderydem@gmail.com');
+
+            if (isAdminEmail) {
+                userRoleBadge.textContent = 'ผู้ดูแลระบบ (Admin)';
+                userRoleBadge.className = 'inline-block px-2 py-0.5 text-[10px] rounded-full bg-red-100 text-red-600 font-bold';
+                adminToolApp.classList.remove('hidden');
+            } else {
+                userRoleBadge.textContent = 'ผู้เล่นทั่วไป';
+                userRoleBadge.className = 'inline-block px-2 py-0.5 text-[10px] rounded-full bg-pink-100 text-pink-600 font-medium';
+                adminToolApp.classList.add('hidden');
+            }
+        }
+
+        // สลับโหมดระหว่าง เข้าสู่ระบบ <-> สมัครสมาชิก
+        toggleModeBtn.addEventListener('click', () => {
+            isRegisterMode = !isRegisterMode;
+            if (isRegisterMode) {
+                formTitle.textContent = 'สมัครสมาชิก';
+                submitBtn.textContent = 'สมัครสมาชิก';
+                toggleText.textContent = 'มีบัญชีอยู่แล้วใช่ไหม?';
+                toggleModeBtn.textContent = 'เข้าสู่ระบบ';
+            } else {
+                formTitle.textContent = 'เข้าสู่ระบบ';
+                submitBtn.textContent = 'เข้าสู่ระบบ';
+                toggleText.textContent = 'ยังไม่มีบัญชีใช่ไหม?';
+                toggleModeBtn.textContent = 'สมัครสมาชิก';
+            }
+        });
+
+        // จัดการฟอร์ม Submit (เชื่อมต่อ Supabase จริง และใช้ Popup น่ารักๆ พร้อมสปีดที่ไวขึ้น)
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'กำลังตรวจสอบ...';
+
+            try {
+                if (isRegisterMode) {
+                    // สมัครสมาชิกผ่าน Supabase (ใช้ตาราง users ตามโครงสร้างเดิม)
+                    const isAdmin = (email === 'ciiderydem@gmail.com');
+                    const { error } = await supabase
+                        .from('users')
+                        .insert([{ email: email, password: password, is_admin: isAdmin }]);
+
+                    if (error) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'สมัครสมาชิก';
+                        showPopup('🥺', 'สมัครสมาชิกไม่สำเร็จ', error.message || 'อีเมลนี้อาจมีผู้ใช้งานแล้ว');
+                        return;
+                    }
+
+                    showPopup('🎉', 'สมัครสมาชิกสำเร็จ!', 'ยินดีต้อนรับสู่ Pocket Diary ค่า', () => {
+                        authSection.classList.add('hidden');
+                        mainSection.classList.remove('hidden');
+                        setupMainPage(email);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'สมัครสมาชิก';
+                    });
+
+                } else {
+                    // กรณีพิเศษแอดมินหลัก
+                    if (email === 'ciiderydem@gmail.com' && password === 'adminciily') {
+                        showPopup('🛠️', 'ยินดีต้อนรับท่านแอดมิน!', 'เข้าสู่ระบบสำเร็จ กำลังเข้าสู่เกม...', () => {
+                            authSection.classList.add('hidden');
+                            mainSection.classList.remove('hidden');
+                            setupMainPage(email);
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'เข้าสู่ระบบ';
+                        });
+                        return;
+                    }
+
+                    // เข้าสู่ระบบปกติ: ค้นหาจากตาราง users ใน Supabase
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('email', email)
+                        .eq('password', password)
+                        .single();
+
+                    if (error || !data) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'เข้าสู่ระบบ';
+                        showPopup('🥺', 'เข้าสู่ระบบไม่สำเร็จ', 'อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือยังไม่ได้สมัครสมาชิก');
+                        return;
+                    }
+
+                    const isAdminData = data.is_admin || (email === 'ciiderydem@gmail.com');
+                    showPopup('💖', 'ยินดีต้อนรับกลับมานะ!', 'กำลังเข้าสู่สมุดบันทึก...', () => {
+                        authSection.classList.add('hidden');
+                        mainSection.classList.remove('hidden');
+                        setupMainPage(data.email);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'เข้าสู่ระบบ';
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                submitBtn.disabled = false;
+                submitBtn.textContent = isRegisterMode ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
+                showPopup('⚠️', 'เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้ โปรดลองใหม่อีกครั้ง');
+            }
+        });
+
+        // เปิด-ปิดหน้าจอมือถือจำลอง
+        openPhoneBtn.addEventListener('click', () => smartphoneModal.classList.remove('hidden'));
+        closePhoneBtn.addEventListener('click', () => smartphoneModal.classList.add('hidden'));
+        smartphoneModal.addEventListener('click', (e) => {
+            if (e.target === smartphoneModal) smartphoneModal.classList.add('hidden');
+        });
+
+        // ออกจากระบบ
+        logoutBtn.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            mainSection.classList.add('hidden');
+            authSection.classList.remove('hidden');
+            authForm.reset();
+            isRegisterMode = false;
+            formTitle.textContent = 'เข้าสู่ระบบ';
+            submitBtn.textContent = 'เข้าสู่ระบบ';
+            toggleText.textContent = 'ยังไม่มีบัญชีใช่ไหม?';
+            toggleModeBtn.textContent = 'สมัครสมาชิก';
+            submitBtn.disabled = false;
+        });
+
+        // นาฬิกามือถือ
+        function updatePhoneClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const phoneTimeEl = document.getElementById('phone-time');
+            if (phoneTimeEl) phoneTimeEl.textContent = `${hours}:${minutes}`;
+        }
+        updatePhoneClock();
+        setInterval(updatePhoneClock, 60000);
+    </script>
+</body>
+</html>
