@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Phone - POCKET DIARY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #fbcfe8;
+            background-image: linear-gradient(135deg, #fbcfe8 0%, #e0f2fe 50%, #fdf2f8 100%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+            min-height: 100vh;
+            min-height: 100dvh;
+            margin: 0;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+        .app-icon {
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+        .app-icon:active {
+            transform: scale(0.92);
+        }
+        .modal-enter {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .screen-view {
+            display: none;
+        }
+        .screen-view.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between p-3 sm:p-5 text-gray-700 min-h-[100dvh]">
+
+    <!-- ================= 1. หน้าจอหลัก (HOME SCREEN) ================= -->
+    <div id="view-home" class="screen-view active flex-col justify-between flex-1 max-w-md w-full mx-auto">
+        <!-- Status Bar & Clock Widget (เอาอินเทอร์เน็ตกับแบตออกแล้ว และจัดฟอร์มวัน เวลาให้สมบูรณ์) -->
+        <header class="w-full flex flex-col items-center glass-panel px-5 py-4 rounded-3xl shadow-sm z-10 shrink-0 mb-4 text-center">
+            <div id="current-date" class="text-xs text-pink-600 font-bold mb-1 tracking-wide">กำลังโหลดวันที่...</div>
+            <div class="text-4xl font-extrabold text-gray-800 tracking-wider font-mono" id="current-time">00:00</div>
+        </header>
+
+        <!-- Apps Grid -->
+        <main class="w-full my-auto grid grid-cols-3 gap-5 px-2 py-4 items-center justify-items-center">
+            <button onclick="switchScreen('my-card')" class="flex flex-col items-center group focus:outline-none app-icon">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5">🪪</div>
+                <span class="text-[11px] font-bold text-gray-700">MY CARD</span>
+            </button>
+            <button onclick="switchScreen('friends')" class="flex flex-col items-center group focus:outline-none app-icon">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5">💬</div>
+                <span class="text-[11px] font-bold text-gray-700">FRIENDS</span>
+            </button>
+            <button onclick="switchScreen('bank')" class="flex flex-col items-center group focus:outline-none app-icon">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5">💳</div>
+                <span class="text-[11px] font-bold text-gray-700">BANK</span>
+            </button>
+            <button onclick="switchScreen('store')" class="flex flex-col items-center group focus:outline-none app-icon">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5">🛒</div>
+                <span class="text-[11px] font-bold text-gray-700">STORE</span>
+            </button>
+            <button onclick="openCodeModal()" class="flex flex-col items-center group focus:outline-none app-icon">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5">🎁</div>
+                <span class="text-[11px] font-bold text-gray-700">CODE</span>
+            </button>
+            <button id="admin-app-btn" onclick="switchScreen('admin')" class="hidden flex flex-col items-center group focus:outline-none app-icon">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-pink-100/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-pink-200 mb-1.5">🛠️</div>
+                <span class="text-[11px] font-bold text-pink-600">ADMIN</span>
+            </button>
+        </main>
+
+        <footer class="w-full flex justify-center items-center pb-2 z-10 shrink-0">
+            <a href="home.html" class="w-36 h-12 glass-panel rounded-full flex items-center justify-center text-sm font-bold text-gray-700 shadow-md hover:bg-white transition cursor-pointer">
+                🏠 กลับหน้าหลัก
+            </a>
+        </footer>
+    </div>
+
+
+    <!-- ================= 2. หน้าแอป MY CARD ================= -->
+    <div id="view-my-card" class="screen-view flex-col justify-between flex-1 max-w-md w-full mx-auto">
+        <header class="w-full flex items-center justify-between glass-panel px-4 py-3 rounded-2xl mb-4 shadow-sm">
+            <button onclick="switchScreen('home')" class="text-xs font-bold text-pink-600 bg-pink-50 px-3 py-1.5 rounded-xl">◀ กลับ</button>
+            <h2 class="font-bold text-gray-800 text-sm">🪪 My Card (นามบัตร)</h2>
+            <div class="w-10"></div>
+        </header>
+
+        <main class="glass-panel p-5 rounded-3xl shadow-md flex flex-col items-center space-y-4 my-auto">
+            <!-- รูปโปรไฟล์อัปโหลดผ่าน Cloudinary -->
+            <div class="relative group">
+                <div id="card-avatar-container" class="w-24 h-24 rounded-full bg-pink-100 border-4 border-white shadow-inner flex items-center justify-center text-3xl overflow-hidden">
+                    🌸
+                </div>
+                <label class="absolute bottom-0 right-0 bg-pink-500 text-white p-1.5 rounded-full shadow cursor-pointer hover:bg-pink-600 text-xs">
+                    📷 <input type="file" id="upload-avatar" accept="image/*" class="hidden" onchange="uploadProfileImage(event)">
+                </label>
+            </div>
+
+            <!-- ข้อมูลแก้ไขได้ -->
+            <div class="w-full space-y-2">
+                <div>
+                    <label class="text-[11px] text-gray-500 font-medium ml-1">ชื่อ (Name)</label>
+                    <input type="text" id="input-name" class="w-full px-3 py-2 bg-white/80 border border-pink-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-pink-400">
+                </div>
+                <div>
+                    <label class="text-[11px] text-gray-500 font-medium ml-1">Username (ใช้แอดเพื่อน)</label>
+                    <input type="text" id="input-username" class="w-full px-3 py-2 bg-white/80 border border-pink-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-pink-400">
+                </div>
+            </div>
+
+            <!-- ข้อมูลคำนวณอัตโนมัติ -->
+            <div class="w-full bg-pink-50/60 p-3 rounded-2xl border border-pink-100 text-xs space-y-1.5">
+                <div class="font-bold text-pink-600 mb-1">📊 ข้อมูลคอลเลกชันของคุณ</div>
+                <div class="flex justify-between"><span>จำนวนตัวละครทั้งหมด:</span> <span id="stat-total-chars" class="font-bold">0 ตัว</span></div>
+                <div class="flex justify-between"><span>จำนวนสกินทั้งหมด:</span> <span id="stat-total-skins" class="font-bold">0 สกิน</span></div>
+                <div class="text-[10px] text-gray-500 pt-1 border-t border-pink-200/50">
+                    ระดับ: B(<span id="stat-b">0</span>) | A(<span id="stat-a">0</span>) | S(<span id="stat-s">0</span>) | SR(<span id="stat-sr">0</span>) | SSR(<span id="stat-ssr">0</span>)
+                </div>
+            </div>
+
+            <button onclick="saveMyCard()" class="w-full py-2.5 bg-pink-500 hover:bg-pink-600 text-white font-bold text-xs rounded-xl shadow-md transition">บันทึกข้อมูลนามบัตร</button>
+        </main>
+        <div></div>
+    </div>
+
+
+    <!-- ================= 3. หน้าแอป FRIENDS ================= -->
+    <div id="view-friends" class="screen-view flex-col justify-between flex-1 max-w-md w-full mx-auto">
+        <header class="w-full flex items-center justify-between glass-panel px-4 py-3 rounded-2xl mb-4 shadow-sm">
+            <button onclick="switchScreen('home')" class="text-xs font-bold text-pink-600 bg-pink-50 px-3 py-1.5 rounded-xl">◀ กลับ</button>
+            <h2 class="font-bold text-gray-800 text-sm">💬 Friends & Chat</h2>
+            <div class="w-10"></div>
+        </header>
+
+        <main class="glass-panel p-4 rounded-3xl shadow-md flex flex-col flex-1 mb-3 space-y-3">
+            <div class="flex space-x-2">
+                <input type="text" id="add-friend-input" placeholder="กรอก Username เพื่อนเพื่อแอด..." class="flex-1 px-3 py-2 bg-white/80 border border-pink-200 rounded-xl text-xs focus:outline-none">
+                <button onclick="sendFriendRequest()" class="px-4 py-2 bg-pink-500 text-white font-bold text-xs rounded-xl shadow">แอดเพื่อน</button>
+            </div>
+            <div class="flex-1 bg-white/60 rounded-2xl p-3 overflow-y-auto border border-pink-100" id="friends-list-container">
+                <p class="text-center text-xs text-gray-400 mt-10">ยังไม่มีรายชื่อเพื่อนในระบบ</p>
+            </div>
+        </main>
+        <div></div>
+    </div>
+
+
+    <!-- ================= 4. หน้าแอป BANK ================= -->
+    <div id="view-bank" class="screen-view flex-col justify-between flex-1 max-w-md w-full mx-auto">
+        <header class="w-full flex items-center justify-between glass-panel px-4 py-3 rounded-2xl mb-3 shadow-sm">
+            <button onclick="switchScreen('home')" class="text-xs font-bold text-pink-600 bg-pink-50 px-3 py-1.5 rounded-xl">◀ กลับ</button>
+            <h2 class="font-bold text-gray-800 text-sm">💳 Bank (ธนาคารส่วนตัว)</h2>
+            <div class="w-10"></div>
+        </header>
+
+        <main class="glass-panel p-4 rounded-3xl shadow-md flex flex-col space-y-3 my-auto">
+            <!-- บัตรเครดิตจำลอง -->
+            <div class="bg-gradient-to-r from-pink-400 to-rose-400 p-4 rounded-2xl text-white shadow-lg relative overflow-hidden">
+                <div class="text-[11px] opacity-80">ACCOUNT NAME</div>
+                <div id="bank-account-name" class="font-bold text-sm mb-2">กำลังโหลด...</div>
+                <div class="text-[11px] opacity-80">ACCOUNT NUMBER</div>
+                <div id="bank-account-no" class="font-mono font-bold text-base tracking-widest mb-3">XXXXXXXXXX</div>
+                <div class="flex justify-between items-end border-t border-white/20 pt-2 text-xs">
+                    <div>เงิน: <span id="bank-money" class="font-bold">0</span> 🪙</div>
+                    <div>เกลือ: <span id="bank-salt" class="font-bold">0</span> 🍪</div>
+                </div>
+            </div>
+
+            <!-- โหมดการใช้งาน -->
+            <div class="flex bg-pink-100/60 p-1 rounded-xl text-xs font-bold text-center">
+                <button onclick="switchBankTab('transfer')" id="tab-btn-transfer" class="flex-1 py-2 rounded-lg bg-white text-pink-600 shadow-sm transition">โอนเงิน</button>
+                <button onclick="switchBankTab('contacts')" id="tab-btn-contacts" class="flex-1 py-2 rounded-lg text-gray-600 transition">รายชื่อผู้รับ</button>
+            </div>
+
+            <!-- หมวด 1: โอนเงิน -->
+            <div id="bank-tab-transfer" class="space-y-2 pt-1">
+                <input type="text" id="transfer-acc" placeholder="เลขบัญชีผู้รับ 10 หลัก" class="w-full px-3 py-2 bg-white/80 border border-pink-200 rounded-xl text-xs focus:outline-none">
+                <input type="number" id="transfer-amount" placeholder="จำนวนเงินที่ต้องการโอน 🪙" class="w-full px-3 py-2 bg-white/80 border border-pink-200 rounded-xl text-xs focus:outline-none">
+                <button onclick="executeTransfer()" class="w-full py-2.5 bg-pink-500 hover:bg-pink-600 text-white font-bold text-xs rounded-xl shadow-md transition">ยืนยันการโอนเงิน</button>
+            </div>
+
+            <!-- หมวด 2: รายชื่อผู้รับเงิน -->
+            <div id="bank-tab-contacts" class="space-y-2 pt-1 hidden">
+                <div class="flex space-x-1">
+                    <input type="text" id="contact-nickname" placeholder="ชื่อเล่นเพื่อน" class="w-1/2 px-3 py-2 bg-white/80 border border-pink-200 rounded-xl text-xs">
+                    <input type="text" id="contact-acc" placeholder="เลขบัญชี" class="w-1/2 px-3 py-2 bg-white/80 border border-pink-200 rounded-xl text-xs">
+                </div>
+                <button onclick="saveContact()" class="w-full py-2 bg-rose-400 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow">บันทึกรายชื่อ</button>
+                <div class="bg-white/60 rounded-xl p-2 h-28 overflow-y-auto border border-pink-100 text-xs space-y-1" id="contacts-list">
+                    <p class="text-center text-gray-400 mt-6">ยังไม่มีรายชื่อที่บันทึกไว้</p>
+                </div>
+            </div>
+        </main>
+        <div></div>
+    </div>
+
+
+    <!-- ================= 5. หน้าแอป STORE ================= -->
+    <div id="view-store" class="screen-view flex-col justify-between flex-1 max-w-md w-full mx-auto">
+        <header class="w-full flex items-center justify-between glass-panel px-4 py-3 rounded-2xl mb-3 shadow-sm">
+            <button onclick="switchScreen('home')" class="text-xs font-bold text-pink-600 bg-pink-50 px-3 py-1.5 rounded-xl">◀ กลับ</button>
+            <h2 class="font-bold text-gray-800 text-sm">🛒 Store (ร้านค้าไอเทม)</h2>
+            <div class="w-10"></div>
+        </header>
+
+        <main class="glass-panel p-4 rounded-3xl shadow-md flex flex-col flex-1 mb-2 space-y-3">
+            <div class="flex bg-pink-100/60 p-1 rounded-xl text-xs font-bold text-center">
+                <button onclick="switchStoreTab('character')" id="store-tab-c" class="flex-1 py-1.5 rounded-lg bg-white text-pink-600 shadow-sm">ตัวละคร</button>
+                <button onclick="switchStoreTab('background')" id="store-tab-b" class="flex-1 py-1.5 rounded-lg text-gray-600">พื้นหลัง</button>
+                <button onclick="switchStoreTab('pet')" id="store-tab-p" class="flex-1 py-1.5 rounded-lg text-gray-600">สัตว์เลี้ยง</button>
+            </div>
+            <div class="flex-1 bg-white/60 rounded-2xl p-3 overflow-y-auto border border-pink-100 space-y-2" id="store-items-container">
+                <p class="text-center text-xs text-gray-400 mt-16">สินค้ากำลังรอการตั้งราคาจาก Admin</p>
+            </div>
+        </main>
+        <div></div>
+    </div>
+
+
+    <!-- ================= 6. หน้าแอป ADMIN ================= -->
+    <div id="view-admin" class="screen-view flex-col justify-between flex-1 max-w-md w-full mx-auto">
+        <header class="w-full flex items-center justify-between glass-panel px-4 py-3 rounded-2xl mb-3 shadow-sm bg-pink-50">
+            <button onclick="switchScreen('home')" class="text-xs font-bold text-pink-600 bg-white px-3 py-1.5 rounded-xl">◀ กลับ</button>
+            <h2 class="font-bold text-pink-700 text-sm">🛠️ Admin Control Panel</h2>
+            <div class="w-10"></div>
+        </header>
+
+        <main class="glass-panel p-4 rounded-3xl shadow-md flex flex-col flex-1 mb-2 space-y-3 overflow-y-auto text-xs">
+            <div class="font-bold text-gray-800 border-b pb-1">⚙️ จัดการราคาสินค้าในร้านค้า (Store Pricing)</div>
+            <p class="text-[11px] text-gray-500">ส่วนนี้สำหรับตั้งค่าราคาสสินค้า หมวด Character, Background และ Pet (กำลังพัฒนาฟังก์ชันเต็มรูปแบบ)</p>
+            <div class="bg-pink-50/60 p-3 rounded-xl border border-pink-200">
+                สถานะระบบ Admin: <span class="text-emerald-600 font-bold">เชื่อมต่อและเปิดใช้งานแล้ว</span>
+            </div>
+        </main>
+        <div></div>
+    </div>
+
+
+    <!-- ================= POPUPS / MODALS ================= -->
+    <!-- CODE MODAL -->
+    <div id="code-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel w-full max-w-xs p-6 rounded-3xl shadow-2xl modal-enter flex flex-col items-center text-center">
+            <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-xl mb-3 shadow-inner">🎁</div>
+            <h3 class="font-bold text-gray-800 text-base mb-1">กรอกโค้ดรับของรางวัล</h3>
+            <p class="text-xs text-gray-500 mb-4">ใส่โค้ดลับเพื่อรับไอเทมเข้าแอคเคาท์ของคุณ</p>
+            <input type="text" id="code-input" placeholder="กรอกโค้ดที่นี่..." class="w-full px-4 py-2.5 bg-white/80 border border-pink-200 rounded-xl text-sm text-center focus:outline-none focus:ring-2 focus:ring-pink-400 mb-4">
+            <div class="flex space-x-2 w-full">
+                <button onclick="closeCodeModal()" class="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-xl transition">ยกเลิก</button>
+                <button onclick="submitCode()" class="flex-1 py-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl shadow-md transition">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM ALERT MODAL -->
+    <div id="custom-alert" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel w-full max-w-xs p-6 rounded-3xl shadow-2xl modal-enter flex flex-col items-center text-center">
+            <div id="alert-icon" class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-xl mb-3 shadow-inner">✨</div>
+            <h3 id="alert-title" class="font-bold text-gray-800 text-base mb-1">แจ้งเตือน</h3>
+            <p id="alert-message" class="text-xs text-gray-600 mb-5">ข้อความแจ้งเตือน...</p>
+            <button onclick="closeCustomAlert()" class="w-full py-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl shadow-md transition">ตกลง</button>
+        </div>
+    </div>
+
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const userEmail = localStorage.getItem('pocket_diary_user');
+        if (!userEmail) {
+            window.location.href = 'index.html';
+        }
+
+        let userProfile = {
+            name: 'ยังไม่ตั้งชื่อ',
+            username: userEmail.split('@')[0],
+            avatar: '🌸',
+            money: 1500,
+            salt: 50,
+            account_no: Math.floor(1000000000 + Math.random() * 9000000000).toString(),
+            account_name: 'บัญชีของฉัน',
+            used_codes: [],
+            contacts: []
+        };
+
+        // โหลดข้อมูลจาก Supabase
+        async function loadUserData() {
+            const { data, error } = await _supabase
+                .from('profiles')
+                .select('*')
+                .eq('email', userEmail)
+                .single();
+
+            if (data) {
+                userProfile.name = data.name || userProfile.name;
+                userProfile.username = data.username || userProfile.username;
+                userProfile.avatar = data.avatar || userProfile.avatar;
+                userProfile.money = data.money ?? 1500;
+                userProfile.salt = data.salt ?? 50;
+                userProfile.account_no = data.account_no || userProfile.account_no;
+                userProfile.account_name = data.account_name || userProfile.account_name;
+                userProfile.used_codes = data.used_codes || [];
+                userProfile.contacts = data.contacts || [];
+
+                if (data.role === 'admin' || userEmail === 'ciiderydem@gmail.com') {
+                    document.getElementById('admin-app-btn').classList.remove('hidden');
+                }
+            } else if (userEmail === 'ciiderydem@gmail.com') {
+                document.getElementById('admin-app-btn').classList.remove('hidden');
+            }
+            updateUI();
+        }
+        loadUserData();
+
+        // ฟังก์ชันอัปเดต UI ภาพรวม
+        function updateUI() {
+            updateCardUI();
+            updateBankUI();
+        }
+
+        // ฟังก์ชันสลับหน้าจอภายในไฟล์เดียว
+        function switchScreen(screenName) {
+            document.querySelectorAll('.screen-view').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${screenName}`).classList.add('active');
+            if (screenName === 'bank') updateBankUI();
+            if (screenName === 'my-card') updateCardUI();
+        }
+
+        // นาฬิกาและวันที่เรียลไทม์ (ภาษาไทย)
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const timeEl = document.getElementById('current-time');
+            const dateEl = document.getElementById('current-date');
+            
+            if (timeEl) timeEl.textContent = `${hours}:${minutes}`;
+            
+            if (dateEl) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = now.toLocaleDateString('th-TH', options);
+            }
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- MY CARD LOGIC ---
+        function updateCardUI() {
+            const inputName = document.getElementById('input-name');
+            const inputUsername = document.getElementById('input-username');
+            if (inputName) inputName.value = userProfile.name;
+            if (inputUsername) inputUsername.value = userProfile.username;
+            
+            const avatarBox = document.getElementById('card-avatar-container');
+            if (avatarBox) {
+                if (userProfile.avatar && userProfile.avatar.startsWith('http')) {
+                    avatarBox.innerHTML = `<img src="${userProfile.avatar}" class="w-full h-full object-cover">`;
+                } else {
+                    avatarBox.innerHTML = userProfile.avatar || '🌸';
+                }
+            }
+
+            // คำนวณตัวละครและสกิน (จำลองจาก Local/Supabase)
+            const totalChars = document.getElementById('stat-total-chars');
+            const totalSkins = document.getElementById('stat-total-skins');
+            if (totalChars) totalChars.textContent = '5 ตัว';
+            if (totalSkins) totalSkins.textContent = '12 สกิน';
+            
+            const statB = document.getElementById('stat-b');
+            const statA = document.getElementById('stat-a');
+            const statS = document.getElementById('stat-s');
+            const statSR = document.getElementById('stat-sr');
+            const statSSR = document.getElementById('stat-ssr');
+            
+            if (statB) statB.textContent = '2';
+            if (statA) statA.textContent = '1';
+            if (statS) statS.textContent = '1';
+            if (statSR) statSR.textContent = '1';
+            if (statSSR) statSSR.textContent = '0';
+        }
+
+        async function uploadProfileImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // อัปโหลดผ่าน Cloudinary Preset ของคุณ
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'YOUR_CLOUDINARY_PRESET'); // แทนที่ด้วย Preset ของคุณ
+
+            showCustomAlert('กำลังอัปโหลด', 'กำลังอัปโหลดรูปภาพโปรไฟล์...', '⏳');
+            try {
+                const res = await fetch('https://api.cloudinary.com/v1_1/ncpkgyfz/image/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.secure_url) {
+                    userProfile.avatar = data.secure_url;
+                    updateCardUI();
+                    saveProfileToSupabase();
+                    showCustomAlert('สำเร็จ', 'อัปโหลดรูปโปรไฟล์เรียบร้อยแล้วค่ะ', '🎉');
+                }
+            } catch (err) {
+                showCustomAlert('ผิดพลาด', 'อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่', '❌');
+            }
+        }
+
+        async function saveMyCard() {
+            const nameEl = document.getElementById('input-name');
+            const usernameEl = document.getElementById('input-username');
+            if (nameEl) userProfile.name = nameEl.value.trim();
+            if (usernameEl) userProfile.username = usernameEl.value.trim();
+            
+            await saveProfileToSupabase();
+            showCustomAlert('สำเร็จ', 'บันทึกข้อมูลนามบัตรเรียบร้อยแล้วค่ะ', '✨');
+        }
+
+        // --- BANK LOGIC ---
+        function updateBankUI() {
+            const accName = document.getElementById('bank-account-name');
+            const accNo = document.getElementById('bank-account-no');
+            const bankMoney = document.getElementById('bank-money');
+            const bankSalt = document.getElementById('bank-salt');
+
+            if (accName) accName.textContent = userProfile.account_name;
+            if (accNo) accNo.textContent = userProfile.account_no;
+            if (bankMoney) bankMoney.textContent = userProfile.money;
+            if (bankSalt) bankSalt.textContent = userProfile.salt;
+            renderContacts();
+        }
+
+        function switchBankTab(tab) {
+            const transferTab = document.getElementById('bank-tab-transfer');
+            const contactsTab = document.getElementById('bank-tab-contacts');
+            const btnTransfer = document.getElementById('tab-btn-transfer');
+            const btnContacts = document.getElementById('tab-btn-contacts');
+
+            if (tab === 'transfer') {
+                if (transferTab) transferTab.classList.remove('hidden');
+                if (contactsTab) contactsTab.classList.add('hidden');
+                if (btnTransfer) btnTransfer.className = 'flex-1 py-2 rounded-lg bg-white text-pink-600 shadow-sm transition';
+                if (btnContacts) btnContacts.className = 'flex-1 py-2 rounded-lg text-gray-600 transition';
+            } else {
+                if (transferTab) transferTab.classList.add('hidden');
+                if (contactsTab) contactsTab.classList.remove('hidden');
+                if (btnContacts) btnContacts.className = 'flex-1 py-2 rounded-lg bg-white text-pink-600 shadow-sm transition';
+                if (btnTransfer) btnTransfer.className = 'flex-1 py-2 rounded-lg text-gray-600 transition';
+            }
+        }
+
+        async function executeTransfer() {
+            const recipientAccEl = document.getElementById('transfer-acc');
+            const amountEl = document.getElementById('transfer-amount');
+            if (!recipientAccEl || !amountEl) return;
+
+            const recipientAcc = recipientAccEl.value.trim();
+            const amount = parseInt(amountEl.value);
+
+            if (!recipientAcc || isNaN(amount) || amount <= 0) {
+                showCustomAlert('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเลขบัญชีและจำนวนเงินให้ถูกต้องค่ะ', '⚠️');
+                return;
+            }
+            if (userProfile.money < amount) {
+                showCustomAlert('เงินไม่พอ', 'ยอดเงินในบัญชีของคุณมีไม่เพียงพอสำหรับการโอนค่ะ', '❌');
+                return;
+            }
+
+            userProfile.money -= amount;
+            await saveProfileToSupabase();
+            updateBankUI();
+            showCustomAlert('โอนเงินสำเร็จ!', `โอนเงินจำนวน ${amount} 🪙 ไปยังบัญชี ${recipientAcc} เรียบร้อยแล้ว`, '💸');
+        }
+
+        function saveContact() {
+            const nickEl = document.getElementById('contact-nickname');
+            const accEl = document.getElementById('contact-acc');
+            if (!nickEl || !accEl) return;
+
+            const nick = nickEl.value.trim();
+            const acc = accEl.value.trim();
+            if (!nick || !acc) return;
+
+            userProfile.contacts.push({ nickname: nick, account_no: acc });
+            saveProfileToSupabase();
+            renderContacts();
+            nickEl.value = '';
+            accEl.value = '';
+            showCustomAlert('บันทึกสำเร็จ', 'เพิ่มรายชื่อเพื่อนในธนาคารแล้ว', '📒');
+        }
+
+        function renderContacts() {
+            const container = document.getElementById('contacts-list');
+            if (!container) return;
+
+            if (!userProfile.contacts || userProfile.contacts.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 mt-6">ยังไม่มีรายชื่อที่บันทึกไว้</p>';
+                return;
+            }
+            container.innerHTML = userProfile.contacts.map(c => `
+                <div class="flex justify-between items-center bg-white/80 p-2 rounded-xl border border-pink-100">
+                    <div>
+                        <div class="font-bold text-gray-800">${c.nickname}</div>
+                        <div class="text-[10px] text-gray-400 font-mono">${c.account_no}</div>
+                    </div>
+                    <button onclick="selectContactForTransfer('${c.account_no}')" class="px-2.5 py-1 bg-pink-500 text-white rounded-lg text-[10px]">โอนเงิน</button>
+                </div>
+            `).join('');
+        }
+
+        function selectContactForTransfer(accNo) {
+            switchBankTab('transfer');
+            const transferAccEl = document.getElementById('transfer-acc');
+            if (transferAccEl) transferAccEl.value = accNo;
+        }
+
+        // --- STORE & FRIENDS TABS ---
+        function switchStoreTab(tab) {
+            ['character', 'background', 'pet'].forEach(t => {
+                const tabBtn = document.getElementById(`store-tab-${t[0]}`);
+                if (tabBtn) {
+                    tabBtn.className = t === tab ? 'flex-1 py-1.5 rounded-lg bg-white text-pink-600 shadow-sm' : 'flex-1 py-1.5 rounded-lg text-gray-600';
+                }
+            });
+        }
+
+        function sendFriendRequest() {
+            const friendInput = document.getElementById('add-friend-input');
+            if (!friendInput) return;
+            const friendName = friendInput.value.trim();
+            if (!friendName) return;
+            showCustomAlert('ส่งคำขอแล้ว', `ส่งคำขอเป็นเพื่อนไปยัง ${friendName} เรียบร้อย`, '💌');
+            friendInput.value = '';
+        }
+
+        // --- CODE SYSTEM ---
+        function openCodeModal() {
+            const codeInput = document.getElementById('code-input');
+            const codeModal = document.getElementById('code-modal');
+            if (codeInput) codeInput.value = '';
+            if (codeModal) {
+                codeModal.classList.remove('hidden');
+                codeModal.classList.add('flex');
+            }
+        }
+        function closeCodeModal() {
+            const codeModal = document.getElementById('code-modal');
+            if (codeModal) {
+                codeModal.classList.remove('flex');
+                codeModal.classList.add('hidden');
+            }
+        }
+
+        async function submitCode() {
+            const codeInput = document.getElementById('code-input');
+            if (!codeInput) return;
+            const code = codeInput.value.trim();
+            if (!code) return;
+
+            if (userProfile.used_codes && userProfile.used_codes.includes(code)) {
+                closeCodeModal();
+                showCustomAlert('ใช้ไปแล้ว', 'โค้ดนี้ถูกใช้งานไปแล้วค่ะ', '❌');
+                return;
+            }
+
+            if (code === 'WELCOME2026') {
+                userProfile.money += 500;
+                userProfile.salt += 20;
+                if (!userProfile.used_codes) userProfile.used_codes = [];
+                userProfile.used_codes.push(code);
+                await saveProfileToSupabase();
+                closeCodeModal();
+                showCustomAlert('สำเร็จ!', 'ได้รับ เงิน 500 🪙 และ คุกกี้ 🍪 เรียบร้อยแล้ว', '🎉');
+            } else {
+                closeCodeModal();
+                showCustomAlert('ไม่พบโค้ด', 'โค้ดไม่ถูกต้องหรือหมดอายุแล้ว', '❓');
+            }
+        }
+
+        // --- SUPABASE SYNC ---
+        async function saveProfileToSupabase() {
+            await _supabase.from('profiles').upsert({
+                email: userEmail,
+                name: userProfile.name,
+                username: userProfile.username,
+                avatar: userProfile.avatar,
+                money: userProfile.money,
+                salt: userProfile.salt,
+                account_no: userProfile.account_no,
+                account_name: userProfile.account_name,
+                used_codes: userProfile.used_codes,
+                contacts: userProfile.contacts,
+                updated_at: new Date()
+            }, { onConflict: 'email' });
+        }
+
+        // --- CUSTOM POPUPS ---
+        function showCustomAlert(title, message, icon = '✨') {
+            const alertTitle = document.getElementById('alert-title');
+            const alertMessage = document.getElementById('alert-message');
+            const alertIcon = document.getElementById('alert-icon');
+            const customAlert = document.getElementById('custom-alert');
+
+            if (alertTitle) alertTitle.textContent = title;
+            if (alertMessage) alertMessage.textContent = message;
+            if (alertIcon) alertIcon.textContent = icon;
+            if (customAlert) {
+                customAlert.classList.remove('hidden');
+                customAlert.classList.add('flex');
+            }
+        }
+        function closeCustomAlert() {
+            const customAlert = document.getElementById('custom-alert');
+            if (customAlert) {
+                customAlert.classList.remove('flex');
+                customAlert.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
