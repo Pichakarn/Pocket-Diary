@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Phone - POCKET DIARY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #fbcfe8;
+            background-image: linear-gradient(135deg, #fbcfe8 0%, #e0f2fe 50%, #fdf2f8 100%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+            min-height: 100vh;
+            min-height: 100dvh;
+            margin: 0;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+        .app-icon {
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+        .app-icon:active {
+            transform: scale(0.92);
+        }
+        .modal-enter {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between p-4 sm:p-6 text-gray-700 min-h-[100dvh]">
+
+    <!-- Status Bar & Clock Widget -->
+    <header class="w-full max-w-md mx-auto flex flex-col items-center glass-panel px-5 py-3 rounded-3xl shadow-sm z-10 shrink-0 mb-4">
+        <div class="w-full flex justify-between items-center text-xs text-gray-500 font-medium mb-1">
+            <span id="current-date">--/--/----</span>
+            <div class="flex items-center space-x-1">
+                <span>📶</span>
+                <span>🔋 100%</span>
+            </div>
+        </div>
+        <div class="text-3xl font-bold text-gray-800 tracking-wider" id="current-time">00:00</div>
+    </header>
+
+    <!-- Phone Apps Grid -->
+    <main class="w-full max-w-md mx-auto my-auto grid grid-cols-3 gap-6 px-2 py-4 items-center justify-items-center">
+        
+        <!-- 1. MY CARD -->
+        <button onclick="openApp('my-card')" class="flex flex-col items-center group focus:outline-none app-icon">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5 group-hover:shadow-lg">
+                🪪
+            </div>
+            <span class="text-[11px] sm:text-xs font-bold text-gray-700 tracking-wide drop-shadow-sm">MY CARD</span>
+        </button>
+
+        <!-- 2. FRIENDS -->
+        <button onclick="openApp('friends')" class="flex flex-col items-center group focus:outline-none app-icon">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5 group-hover:shadow-lg">
+                💬
+            </div>
+            <span class="text-[11px] sm:text-xs font-bold text-gray-700 tracking-wide drop-shadow-sm">FRIENDS</span>
+        </button>
+
+        <!-- 3. BANK -->
+        <button onclick="openApp('bank')" class="flex flex-col items-center group focus:outline-none app-icon">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5 group-hover:shadow-lg">
+                💳
+            </div>
+            <span class="text-[11px] sm:text-xs font-bold text-gray-700 tracking-wide drop-shadow-sm">BANK</span>
+        </button>
+
+        <!-- 4. STORE -->
+        <button onclick="openApp('store')" class="flex flex-col items-center group focus:outline-none app-icon">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5 group-hover:shadow-lg">
+                🛒
+            </div>
+            <span class="text-[11px] sm:text-xs font-bold text-gray-700 tracking-wide drop-shadow-sm">STORE</span>
+        </button>
+
+        <!-- 5. CODE -->
+        <button onclick="openCodeModal()" class="flex flex-col items-center group focus:outline-none app-icon">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-white mb-1.5 group-hover:shadow-lg">
+                🎁
+            </div>
+            <span class="text-[11px] sm:text-xs font-bold text-gray-700 tracking-wide drop-shadow-sm">CODE</span>
+        </button>
+
+        <!-- 6. ADMIN (Hidden for non-admin) -->
+        <button id="admin-app-btn" onclick="openApp('admin')" class="hidden flex flex-col items-center group focus:outline-none app-icon">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-pink-100/90 rounded-2xl shadow-md flex items-center justify-center text-2xl sm:text-3xl border border-pink-200 mb-1.5 group-hover:shadow-lg">
+                🛠️
+            </div>
+            <span class="text-[11px] sm:text-xs font-bold text-pink-600 tracking-wide drop-shadow-sm">ADMIN</span>
+        </button>
+
+    </main>
+
+    <!-- Footer Home Button -->
+    <footer class="w-full max-w-md mx-auto flex justify-center items-center pb-2 z-10 shrink-0">
+        <a href="home.html" class="w-36 h-12 glass-panel rounded-full flex items-center justify-center text-sm font-bold text-gray-700 shadow-md hover:bg-white transition cursor-pointer">
+            🏠 กลับหน้าหลัก
+        </a>
+    </footer>
+
+    <!-- CODE POPUP MODAL -->
+    <div id="code-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel w-full max-w-xs p-6 rounded-3xl shadow-2xl modal-enter flex flex-col items-center text-center">
+            <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-xl mb-3 shadow-inner">🎁</div>
+            <h3 class="font-bold text-gray-800 text-base mb-1">กรอกโค้ดรับของรางวัล</h3>
+            <p class="text-xs text-gray-500 mb-4">ใส่โค้ดลับเพื่อรับไอเทมเข้าแอคเคาท์ของคุณ</p>
+            
+            <input type="text" id="code-input" placeholder="กรอกโค้ดที่นี่..." class="w-full px-4 py-2.5 bg-white/80 border border-pink-200 rounded-xl text-sm text-center focus:outline-none focus:ring-2 focus:ring-pink-400 mb-4">
+            
+            <div class="flex space-x-2 w-full">
+                <button onclick="closeCodeModal()" class="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-xl transition">ยกเลิก</button>
+                <button onclick="submitCode()" class="flex-1 py-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl shadow-md transition">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM ALERT MODAL -->
+    <div id="custom-alert" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel w-full max-w-xs p-6 rounded-3xl shadow-2xl modal-enter flex flex-col items-center text-center">
+            <div id="alert-icon" class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-xl mb-3 shadow-inner">✨</div>
+            <h3 id="alert-title" class="font-bold text-gray-800 text-base mb-1">แจ้งเตือน</h3>
+            <p id="alert-message" class="text-xs text-gray-600 mb-5">ข้อความแจ้งเตือน...</p>
+            <button onclick="closeCustomAlert()" class="w-full py-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl shadow-md transition">ตกลง</button>
+        </div>
+    </div>
+
+    <script>
+        // ตั้งค่า Supabase (เปลี่ยน URL และ Anon Key ของคุณตรงนี้)
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const userEmail = localStorage.getItem('pocket_diary_user');
+        if (!userEmail) {
+            window.location.href = 'index.html';
+        }
+
+        let userProfile = {
+            money: 1500,
+            salt: 50,
+            used_codes: []
+        };
+
+        // โหลดข้อมูลผู้ใช้จาก Supabase ทันทีที่เปิดหน้า
+        async function loadUserData() {
+            const { data, error } = await _supabase
+                .from('profiles')
+                .select('*')
+                .eq('email', userEmail)
+                .single();
+
+            if (data) {
+                userProfile.money = data.money ?? 1500;
+                userProfile.salt = data.salt ?? 50;
+                userProfile.used_codes = data.used_codes || [];
+
+                // ตรวจสอบสิทธิ์ Admin จาก Supabase หรืออีเมล
+                if (data.role === 'admin' || userEmail === 'ciiderydem@gmail.com') {
+                    document.getElementById('admin-app-btn').classList.remove('hidden');
+                }
+            } else {
+                if (userEmail === 'ciiderydem@gmail.com') {
+                    document.getElementById('admin-app-btn').classList.remove('hidden');
+                }
+            }
+        }
+        loadUserData();
+
+        // นาฬิกาแบบเรียลไทม์
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', options);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // เปิดแอปต่างๆ
+        function openApp(appName) {
+            switch(appName) {
+                case 'my-card': window.location.href = 'my_card.html'; break;
+                case 'friends': window.location.href = 'friends.html'; break;
+                case 'bank': window.location.href = 'bank.html'; break;
+                case 'store': window.location.href = 'store.html'; break;
+                case 'admin': window.location.href = 'admin.html'; break;
+                default: showCustomAlert('แจ้งเตือน', 'แอปพลิเคชันนี้กำลังพัฒนาค่ะ', '🛠️');
+            }
+        }
+
+        // ระบบจัดการ CODE
+        function openCodeModal() {
+            document.getElementById('code-input').value = '';
+            document.getElementById('code-modal').classList.remove('hidden');
+            document.getElementById('code-modal').classList.add('flex');
+        }
+
+        function closeCodeModal() {
+            document.getElementById('code-modal').classList.remove('flex');
+            document.getElementById('code-modal').classList.add('hidden');
+        }
+
+        async function submitCode() {
+            const code = document.getElementById('code-input').value.trim();
+            if (!code) {
+                showCustomAlert('ผิดพลาด', 'กรุณากรอกโค้ดก่อนกดยืนยันนะคะ', '⚠️');
+                return;
+            }
+
+            if (userProfile.used_codes.includes(code)) {
+                closeCodeModal();
+                showCustomAlert('เสียใจด้วย', 'โค้ดนี้ถูกใช้งานไปแล้วค่ะ ไม่สามารถใช้ซ้ำได้', '❌');
+                return;
+            }
+
+            // ตัวอย่างโค้ดแจกรางวัล
+            if (code === 'WELCOME2026') {
+                userProfile.money += 500;
+                userProfile.salt += 20;
+                userProfile.used_codes.push(code);
+
+                // บันทึกอัปเดตลง Supabase ทันที
+                const { error } = await _supabase
+                    .from('profiles')
+                    .upsert({ 
+                        email: userEmail, 
+                        money: userProfile.money, 
+                        salt: userProfile.salt, 
+                        used_codes: userProfile.used_codes,
+                        updated_at: new Date()
+                    }, { onConflict: 'email' });
+
+                if (error) {
+                    showCustomAlert('ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลลงฐานข้อมูลได้', '❌');
+                    return;
+                }
+
+                closeCodeModal();
+                showCustomAlert('สำเร็จ!', 'ยินดีด้วยค่ะ! คุณได้รับเงิน 500 🪙 และคุกกี้ 20 🍪 เรียบร้อยแล้ว', '🎉');
+            } else {
+                closeCodeModal();
+                showCustomAlert('ไม่พบโค้ดนี้', 'โค้ดไม่ถูกต้องหรืออาจจะหมดอายุไปแล้วค่ะ', '❓');
+            }
+        }
+
+        // Popup แจ้งเตือนน่ารักๆ
+        function showCustomAlert(title, message, icon = '✨') {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('alert-icon').textContent = icon;
+            document.getElementById('custom-alert').classList.remove('hidden');
+            document.getElementById('custom-alert').classList.add('flex');
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('custom-alert').classList.remove('flex');
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
