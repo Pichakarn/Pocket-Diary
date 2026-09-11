@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lobby - POCKET DIARY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            position: fixed;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+        }
+        .glass-phone {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body id="lobby-bg" class="flex flex-col justify-between p-3 sm:p-6 text-gray-700" style="background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop');">
+
+    <!-- แถบด้านบน (Navbar) -->
+    <header class="w-full max-w-5xl mx-auto flex justify-between items-center glass-panel px-4 py-2.5 rounded-2xl shadow-sm z-10 shrink-0">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-pink-100 flex items-center justify-center text-base shadow-inner">📖</div>
+            <div>
+                <span id="user-email-display" class="font-bold text-gray-800 text-xs block">กำลังโหลด...</span>
+                <span id="role-badge" class="text-[10px] text-pink-500 font-medium">ผู้ใช้งานทั่วไป</span>
+            </div>
+        </div>
+        <button id="logout-btn" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-600 font-medium text-xs rounded-xl transition cursor-pointer">
+            ออก
+        </button>
+    </header>
+
+    <!-- พื้นที่ตรงกลาง: ตัวละครหลักในล็อบบี้ -->
+    <main class="w-full max-w-5xl mx-auto my-auto flex flex-col items-center justify-center relative">
+        <div class="flex flex-col items-center transform hover:scale-105 transition duration-300 cursor-pointer" onclick="openCharacterSelector()">
+            <div class="w-32 h-32 sm:w-44 sm:h-44 rounded-full bg-white/40 border-4 border-white/80 shadow-2xl flex items-center justify-center text-5xl sm:text-6xl backdrop-blur-xs mb-2.5 overflow-hidden">
+                <span id="lobby-char-avatar">🌸</span>
+            </div>
+            <div class="glass-panel px-4 py-1.5 rounded-full shadow-md text-center">
+                <span id="lobby-char-name" class="text-xs sm:text-sm font-bold text-gray-800">ไอจัง (นักเรียนฝึกหัด)</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- เมนูด้านล่าง (จัดวาง 5 ไอคอนขนาดเท่ากันเรียงแถวแนวนอน ไม่จมขอบจอ) -->
+    <footer class="w-full max-w-5xl mx-auto flex justify-around items-end z-10 pb-3 sm:pb-4 shrink-0">
+        <!-- 1. GACHA -->
+        <a href="gacha.html" class="flex flex-col items-center hover:scale-105 transition cursor-pointer group focus:outline-none">
+            <img src="https://res.cloudinary.com/ncpkgyfz/image/upload/v1789125922/mag4vfdtgzzwjpwmv5w4.png" alt="Gacha" class="w-14 h-14 sm:w-18 sm:h-18 object-contain drop-shadow-lg mb-1">
+            <span class="text-[10px] sm:text-xs font-bold text-white tracking-wider drop-shadow-md">GACHA</span>
+        </a>
+
+        <!-- 2. MINIGAME -->
+        <button onclick="openMinigameModal()" class="flex flex-col items-center hover:scale-105 transition cursor-pointer group focus:outline-none bg-transparent border-0 p-0">
+            <img src="https://res.cloudinary.com/ncpkgyfz/image/upload/v1789125402/pb9q6zjgfueuvtbooohr.png" alt="Minigame" class="w-14 h-14 sm:w-18 sm:h-18 object-contain drop-shadow-lg mb-1">
+            <span class="text-[10px] sm:text-xs font-bold text-white tracking-wider drop-shadow-md">MINIGAME</span>
+        </button>
+
+        <!-- 3. DIARY -->
+        <button onclick="openDiaryCollectionModal()" class="flex flex-col items-center hover:scale-105 transition cursor-pointer group focus:outline-none bg-transparent border-0 p-0">
+            <img src="https://res.cloudinary.com/ncpkgyfz/image/upload/v1789125418/p6eluz9xd15wwwdc5yyo.png" alt="Diary" class="w-14 h-14 sm:w-18 sm:h-18 object-contain drop-shadow-lg mb-1">
+            <span class="text-[10px] sm:text-xs font-bold text-white tracking-wider drop-shadow-md">DIARY</span>
+        </button>
+
+        <!-- 4. INVENTORY -->
+        <button onclick="openInventoryModal()" class="flex flex-col items-center hover:scale-105 transition cursor-pointer group focus:outline-none bg-transparent border-0 p-0">
+            <img src="https://res.cloudinary.com/ncpkgyfz/image/upload/v1789125395/z6aukuewgjba0mdbgsfz.png" alt="Inventory" class="w-14 h-14 sm:w-18 sm:h-18 object-contain drop-shadow-lg mb-1">
+            <span class="text-[10px] sm:text-xs font-bold text-white tracking-wider drop-shadow-md">INVENTORY</span>
+        </button>
+
+        <!-- 5. PHONE -->
+        <div class="relative flex flex-col items-center">
+            <button onclick="togglePhoneMenu()" class="flex flex-col items-center hover:scale-105 transition cursor-pointer group focus:outline-none bg-transparent border-0 p-0">
+                <img src="https://res.cloudinary.com/ncpkgyfz/image/upload/v1789125433/merda4dtpylmqa0y4jgn.png" alt="Phone" class="w-14 h-14 sm:w-18 sm:h-18 object-contain drop-shadow-lg mb-1 animate-pulse">
+                <span class="text-[10px] sm:text-xs font-bold text-white tracking-wider drop-shadow-md">PHONE</span>
+            </button>
+
+            <!-- PocketOS Menu Popup -->
+            <div id="phone-menu" class="absolute bottom-20 right-0 w-72 sm:w-80 glass-phone rounded-3xl p-4 shadow-2xl hidden flex-col space-y-3 z-30 transition-all">
+                <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <span class="font-bold text-xs text-gray-700 flex items-center">📱 PocketOS Menu</span>
+                    <button onclick="togglePhoneMenu()" class="text-gray-400 hover:text-gray-600 text-xs">✕ ปิด</button>
+                </div>
+                <div class="grid grid-cols-3 gap-2.5">
+                    <button onclick="openApp('friends')" class="bg-white/80 hover:bg-white p-3 rounded-2xl shadow-xs flex flex-col items-center justify-center transition cursor-pointer">
+                        <span class="text-xl mb-1">👥</span>
+                        <span class="text-[10px] font-medium text-gray-600">เพื่อน</span>
+                    </button>
+                    <button onclick="openApp('bank')" class="bg-white/80 hover:bg-white p-3 rounded-2xl shadow-xs flex flex-col items-center justify-center transition cursor-pointer">
+                        <span class="text-xl mb-1">🏦</span>
+                        <span class="text-[10px] font-medium text-gray-600">ธนาคาร</span>
+                    </button>
+                    <button onclick="openApp('work')" class="bg-white/80 hover:bg-white p-3 rounded-2xl shadow-xs flex flex-col items-center justify-center transition cursor-pointer">
+                        <span class="text-xl mb-1">💼</span>
+                        <span class="text-[10px] font-medium text-gray-600">ทำงาน</span>
+                    </button>
+                    <button onclick="openApp('shop')" class="bg-white/80 hover:bg-white p-3 rounded-2xl shadow-xs flex flex-col items-center justify-center transition cursor-pointer">
+                        <span class="text-xl mb-1">🛍️</span>
+                        <span class="text-[10px] font-medium text-gray-600">ร้านค้า</span>
+                    </button>
+                    <button onclick="openApp('code')" class="bg-white/80 hover:bg-white p-3 rounded-2xl shadow-xs flex flex-col items-center justify-center transition cursor-pointer">
+                        <span class="text-xl mb-1">🎟️</span>
+                        <span class="text-[10px] font-medium text-gray-600">กรอกโค้ด</span>
+                    </button>
+                    <button id="admin-app-btn" onclick="openApp('admin')" class="bg-purple-100 hover:bg-purple-200 p-3 rounded-2xl shadow-xs flex flex-col items-center justify-center transition cursor-pointer hidden">
+                        <span class="text-xl mb-1">🛠️</span>
+                        <span class="text-[10px] font-bold text-purple-600">Admin</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Universal Modal -->
+    <div id="universal-modal" class="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50">
+        <div id="modal-container" class="bg-white/95 border border-pink-100 w-full max-w-md rounded-3xl p-6 shadow-2xl relative flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                <h3 id="modal-title" class="font-bold text-gray-800 text-base">หัวข้อ</h3>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-xs transition cursor-pointer">✕</button>
+            </div>
+            <div id="modal-body" class="overflow-y-auto no-scrollbar flex-1 space-y-3 pr-1">
+                <!-- เนื้อหาไดนามิก -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userEmail = localStorage.getItem('pocket_diary_user');
+        const userRole = localStorage.getItem('pocket_diary_role');
+
+        if (!userEmail) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('user-email-display').textContent = userEmail;
+
+        if (userRole === 'admin' || userEmail === 'ciiderydem@gmail.com') {
+            document.getElementById('role-badge').textContent = 'ผู้ดูแลระบบ (Admin)';
+            document.getElementById('admin-app-btn').classList.remove('hidden');
+        }
+
+        let gameState = JSON.parse(localStorage.getItem('pocket_game_state')) || {
+            money: 1500,
+            salt: 50,
+            currentBg: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop',
+            currentLobbyChar: { name: 'ไอจัง', title: 'นักเรียนฝึกหัด', avatar: '🌸' },
+            inventory: ['พื้นหลังห้องนอนมินิมอล', 'แมวส้มพุงป่อง'],
+            friends: [
+                { name: 'Mimi', affection: 85, status: 'ออนไลน์' },
+                { name: 'Nana', affection: 40, status: 'ออฟไลน์' }
+            ],
+            unlockedCharacters: ['ไอจัง']
+        };
+
+        function saveGame() {
+            localStorage.setItem('pocket_game_state', JSON.stringify(gameState));
+            document.getElementById('lobby-char-name').textContent = `${gameState.currentLobbyChar.name} (${gameState.currentLobbyChar.title})`;
+            document.getElementById('lobby-char-avatar').textContent = gameState.currentLobbyChar.avatar;
+            document.getElementById('lobby-bg').style.backgroundImage = `url('${gameState.currentBg}')`;
+        }
+
+        saveGame();
+
+        function togglePhoneMenu() {
+            const menu = document.getElementById('phone-menu');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+        }
+
+        const modal = document.getElementById('universal-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+
+        function showModal(title, htmlContent) {
+            modalTitle.textContent = title;
+            modalBody.innerHTML = htmlContent;
+            modal.classList.remove('hidden');
+            document.getElementById('phone-menu').classList.add('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        function openApp(appName) {
+            if (appName === 'friends') {
+                let friendsHtml = `<div class="space-y-3">
+                    <div class="flex space-x-2">
+                        <input type="text" id="add-friend-input" placeholder="ID หรือชื่อเพื่อน..." class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none">
+                        <button onclick="addFriend()" class="px-4 py-2 bg-pink-400 text-white rounded-xl text-xs font-medium cursor-pointer">แอดเพื่อน</button>
+                    </div>
+                    <div class="space-y-2 pt-2">`;
+                gameState.friends.forEach((f, idx) => {
+                    friendsHtml += `<div class="bg-gray-50 p-3 rounded-2xl flex items-center justify-between border border-gray-100">
+                        <div>
+                            <p class="font-bold text-xs text-gray-800">${f.name} <span class="text-[10px] text-green-500 font-normal">(${f.status})</span></p>
+                            <p class="text-[10px] text-gray-400">ความสัมพันธ์: ❤️ ${f.affection}%</p>
+                        </div>
+                        <div class="flex space-x-1.5">
+                            <button onclick="sendGift(${idx})" class="px-2.5 py-1.5 bg-pink-50 text-pink-600 rounded-lg text-[10px] font-semibold cursor-pointer">ส่งของขวัญ</button>
+                            <button onclick="chatFriend('${f.name}')" class="px-2.5 py-1.5 bg-sky-50 text-sky-600 rounded-lg text-[10px] font-semibold cursor-pointer">แชท</button>
+                        </div>
+                    </div>`;
+                });
+                friendsHtml += `</div></div>`;
+                showModal('👥 เพื่อน & ความสัมพันธ์', friendsHtml);
+            } 
+            else if (appName === 'bank') {
+                showModal('🏦 ธนาคารส่วนตัว', `
+                    <div class="space-y-4 text-center">
+                        <div class="bg-gradient-to-r from-pink-50 to-sky-50 p-4 rounded-2xl border border-pink-100">
+                            <p class="text-xs text-gray-400 mb-1">เงินในบัญชี (โอนให้เพื่อนได้)</p>
+                            <p class="text-2xl font-bold text-pink-600">🪙 ${gameState.money.toLocaleString()} G</p>
+                            <p class="text-[11px] text-purple-600 mt-2">💎 เกลือในตัว: ${gameState.salt.toLocaleString()} (ไม่สามารถโอนได้)</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-2xl text-left space-y-2 border border-gray-100">
+                            <p class="font-bold text-xs text-gray-700">💸 โอนเงินให้เพื่อน</p>
+                            <select id="transfer-friend" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                                ${gameState.friends.map(f => `<option value="${f.name}">${f.name}</option>`).join('')}
+                            </select>
+                            <input type="number" id="transfer-amount" placeholder="จำนวนเงิน" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                            <button onclick="executeTransfer()" class="w-full py-2.5 bg-pink-500 text-white rounded-xl text-xs font-semibold cursor-pointer">ยืนยันการโอน</button>
+                        </div>
+                    </div>
+                `);
+            }
+            else if (appName === 'work') {
+                showModal('💼 งานพาร์ทไทม์ (AFK)', `
+                    <div class="space-y-3 text-center">
+                        <p class="text-xs text-gray-500">เลือกงานเพื่อสร้างรายได้สะสม แม้คุณจะไม่ได้เปิดหน้าจอทิ้งไว้</p>
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-left flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-xs text-gray-800">📝 คัดลอกต้นฉบับนิยาย</p>
+                                <p class="text-[10px] text-gray-400">ผลตอบแทน: +300 G / รอบ</p>
+                            </div>
+                            <button onclick="claimWork(300)" class="px-4 py-2 bg-sky-500 text-white rounded-xl text-xs font-medium cursor-pointer">รับเงินค่าจ้าง</button>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-left flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-xs text-gray-800">☕ บาริสต้าคาเฟ่แมว</p>
+                                <p class="text-[10px] text-gray-400">ผลตอบแทน: +750 G / รอบ</p>
+                            </div>
+                            <button onclick="claimWork(750)" class="px-4 py-2 bg-sky-500 text-white rounded-xl text-xs font-medium cursor-pointer">รับเงินค่าจ้าง</button>
+                        </div>
+                    </div>
+                `);
+            }
+            else if (appName === 'shop') {
+                showModal('🛍️ ร้านค้าไอเทม & สกิน', `
+                    <div class="space-y-3">
+                        <div class="bg-gray-50 p-3 rounded-2xl flex justify-between items-center border border-gray-100">
+                            <div>
+                                <p class="font-bold text-xs text-gray-800">🖼️ พื้นหลัง: สวนดอกไม้ฤดูใบไม้ผลิ</p>
+                                <p class="text-[10px] text-pink-500 font-semibold">🪙 1,000 G</p>
+                            </div>
+                            <button onclick="buyItem('bg', 'สวนดอกไม้ฤดูใบไม้ผลิ', 1000, 'https://images.unsplash.com/photo-1522383225653-ed111181a951?q=80&w=1920&auto=format&fit=crop')" class="px-3 py-1.5 bg-pink-500 text-white rounded-xl text-xs font-medium cursor-pointer">ซื้อ</button>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-2xl flex justify-between items-center border border-gray-100">
+                            <div>
+                                <p class="font-bold text-xs text-gray-800">🐱 สัตว์เลี้ยง: น้องหมาชิบะนุ่มฟู</p>
+                                <p class="text-[10px] text-pink-500 font-semibold">🪙 2,500 G</p>
+                            </div>
+                            <button onclick="buyItem('item', 'น้องหมาชิบะนุ่มฟู', 2500)" class="px-3 py-1.5 bg-pink-500 text-white rounded-xl text-xs font-medium cursor-pointer">ซื้อ</button>
+                        </div>
+                    </div>
+                `);
+            }
+            else if (appName === 'code') {
+                showModal('🎟️ กรอกโค้ดของขวัญ', `
+                    <div class="space-y-3 text-center">
+                        <p class="text-xs text-gray-500">กรอกโค้ดลับเพื่อรับไอเทมและเกลือฟรี!</p>
+                        <input type="text" id="giftcode-input" placeholder="เช่น POCKET2026" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-center outline-none uppercase font-bold tracking-widest">
+                        <button onclick="redeemCode()" class="w-full py-2.5 bg-gradient-to-r from-sky-400 to-pink-400 text-white rounded-xl text-xs font-semibold cursor-pointer">แลกรับรางวัล</button>
+                    </div>
+                `);
+            }
+            else if (appName === 'admin') {
+                showModal('🛠️ เครื่องมือแอดมิน', `
+                    <div class="space-y-3 text-center">
+                        <p class="text-xs text-purple-600 font-bold">โซนพิเศษสำหรับผู้ดูแลระบบ</p>
+                        <button onclick="adminAddCurrency(5000, 500)" class="w-full py-3 bg-purple-500 text-white rounded-xl text-xs font-semibold cursor-pointer">🎁 แจกเงิน (+5,000 G) และเกลือ (+500 💎)</button>
+                    </div>
+                `);
+            }
+        }
+
+        function openDiaryCollectionModal() {
+            showModal('📖 สมุดไดอารี่คอลเลกชันตัวละคร', `
+                <div class="grid grid-cols-2 gap-3">
+                    <div onclick="openCharacterDetail('ไอจัง', 'นักเรียนฝึกหัด', '🌸', 'เด็กสาวผู้ร่าเริงและรักการเขียนไดอารี่เป็นชีวิตจิตใจ', '17 ปี', 'นักเรียน / ฝึกหัด')" class="bg-gray-50 p-4 rounded-2xl border border-pink-100 flex flex-col items-center cursor-pointer hover:bg-pink-50/50 transition">
+                        <span class="text-4xl mb-2">🌸</span>
+                        <p class="font-bold text-xs text-gray-800">ไอจัง</p>
+                        <p class="text-[10px] text-pink-500">ปลดล็อคแล้ว</p>
+                    </div>
+                    <div onclick="openCharacterDetail('ลูน่า', 'เจ้าหญิงรัศมิ์ดารา', '🌙', 'ราชนิกุลผู้ลึกลับที่ชื่นชอบความเงียบสงบยามค่ำคืน', '19 ปี', 'เจ้าหญิง', true)" class="bg-gray-50 p-4 rounded-2xl border border-gray-200 flex flex-col items-center cursor-pointer hover:bg-gray-100 transition">
+                        <span class="text-4xl mb-2 opacity-50">🌙</span>
+                        <p class="font-bold text-xs text-gray-600">ลูน่า (ลิมิเต็ด)</p>
+                        <p class="text-[10px] text-gray-400">ยังไม่ได้รับ</p>
+                    </div>
+                </div>
+            `);
+        }
+
+        function openCharacterDetail(name, title, avatar, desc, age, job, isLocked = false) {
+            showModal(`📖 ข้อมูลตัวละคร: ${name}`, `
+                <div class="flex flex-col items-center text-center space-y-3">
+                    <div class="w-24 h-24 rounded-full bg-pink-50 border-2 border-pink-200 flex items-center justify-center text-5xl">
+                        ${avatar}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-800">${name} (${title})</h4>
+                        <p class="text-[11px] text-gray-500 mt-1">${desc}</p>
+                    </div>
+                    <div class="w-full bg-gray-50 p-3 rounded-2xl text-left text-xs space-y-1 border border-gray-100">
+                        <p><b>อายุ:</b> ${age}</p>
+                        <p><b>อาชีพ:</b> ${job}</p>
+                        <p><b>สถานะ:</b> ${isLocked ? '<span class="text-red-400">ยังไม่ปลดล็อก (หาได้จากตู้กาชาช่วงเวลานี้)</span>' : '<span class="text-green-500">ปลดล็อกแล้ว พร้อมใช้งาน</span>'}</p>
+                    </div>
+                    ${!isLocked ? `<button onclick="setLobbyCharacter('${name}', '${title}', '${avatar}')" class="w-full py-2.5 bg-pink-500 text-white rounded-xl text-xs font-semibold cursor-pointer">ตั้งค่าตัวละครนี้เป็นตัวหลักล็อบบี้</button>` : ''}
+                </div>
+            `);
+        }
+
+        function setLobbyCharacter(name, title, avatar) {
+            gameState.currentLobbyChar = { name, title, avatar };
+            saveGame();
+            closeModal();
+            alert(`เปลี่ยนตัวละครหลักเป็น ${name} สำเร็จ!`);
+        }
+
+        function openMinigameModal() {
+            showModal('🎮 มินิเกมเสี่ยงโชค', `
+                <div class="text-center space-y-4">
+                    <p class="text-xs text-gray-500">ทายหัวหรือก้อย เพื่อลุ้นรับเงินรางวัลทันที!</p>
+                    <div class="flex justify-center space-x-3">
+                        <button onclick="playCoinFlip('หัว')" class="px-6 py-3 bg-pink-100 text-pink-600 rounded-2xl font-bold text-xs cursor-pointer hover:bg-pink-200">🪙 หัว</button>
+                        <button onclick="playCoinFlip('ก้อย')" class="px-6 py-3 bg-sky-100 text-sky-600 rounded-2xl font-bold text-xs cursor-pointer hover:bg-sky-200">🪙 ก้อย</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        function playCoinFlip(choice) {
+            const result = Math.random() < 0.5 ? 'หัว' : 'ก้อย';
+            if (result === choice) {
+                gameState.money += 500;
+                saveGame();
+                alert(`🎉 ยินดีด้วย! เหรียญออก "${result}" คุณทายถูก ได้รับ +500 G!`);
+            } else {
+                alert(`😢 เสียใจด้วย! เหรียญออก "${result}" คุณทายผิด ลองใหม่อีกครั้งนะ`);
+            }
+            closeModal();
+        }
+
+        function openInventoryModal() {
+            let invHtml = `<div class="space-y-2">`;
+            if (gameState.inventory.length === 0) {
+                invHtml += `<p class="text-xs text-gray-400 text-center py-4">คลังเก็บของว่างเปล่า ไปช้อปปิ้งหรือสุ่มกาชาได้เลย!</p>`;
+            } else {
+                gameState.inventory.forEach(item => {
+                    invHtml += `<div class="bg-gray-50 p-3 rounded-2xl flex justify-between items-center border border-gray-100">
+                        <span class="text-xs font-bold text-gray-700">📦 ${item}</span>
+                        <button onclick="useInventoryItem('${item}')" class="px-3 py-1 bg-pink-50 text-pink-600 rounded-lg text-[10px] font-semibold cursor-pointer">ใช้งาน</button>
+                    </div>`;
+                });
+            }
+            invHtml += `</div>`;
+            showModal('🎒 คลังเก็บของ (Inventory)', invHtml);
+        }
+
+        function useInventoryItem(item) {
+            if (item.includes('พื้นหลัง')) {
+                gameState.currentBg = 'https://images.unsplash.com/photo-1522383225653-ed111181a951?q=80&w=1920&auto=format&fit=crop';
+                saveGame();
+                alert('เปลี่ยนพื้นหลังล็อบบี้สำเร็จ!');
+            } else {
+                alert(`คุณใช้งานไอเทม "${item}" เรียบร้อยแล้ว!`);
+            }
+            closeModal();
+        }
+
+        function addFriend() {
+            const input = document.getElementById('add-friend-input').value.trim();
+            if (!input) return;
+            gameState.friends.push({ name: input, affection: 10, status: 'ออนไลน์' });
+            saveGame();
+            alert(`เพิ่มเพื่อน "${input}" สำเร็จ!`);
+            closeModal();
+        }
+
+        function sendGift(idx) {
+            if (gameState.money < 100) {
+                alert('เงินไม่พอส่งของขวัญ (ต้องการ 100 G)');
+                return;
+            }
+            gameState.money -= 100;
+            gameState.friends[idx].affection += 15;
+            saveGame();
+            alert(`ส่งของให้ ${gameState.friends[idx].name} สำเร็จ! ความสัมพันธ์เพิ่มขึ้น +15% ❤️`);
+            closeModal();
+        }
+
+        function chatFriend(name) {
+            alert(`กำลังเปิดห้องแชทส่วนตัวกับ ${name}...`);
+        }
+
+        function executeTransfer() {
+            const friend = document.getElementById('transfer-friend').value;
+            const amount = parseInt(document.getElementById('transfer-amount').value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('กรุณากรอกจำนวนเงินให้ถูกต้อง');
+                return;
+            }
+            if (gameState.money < amount) {
+                alert('เงินในบัญชีของคุณไม่พอโอน');
+                return;
+            }
+            gameState.money -= amount;
+            saveGame();
+            alert(`โอนเงินจำนวน ${amount.toLocaleString()} G ให้เพื่อน (${friend}) สำเร็จเรียบร้อย!`);
+            closeModal();
+        }
+
+        function claimWork(amount) {
+            gameState.money += amount;
+            saveGame();
+            alert(`ทำงานเสร็จสิ้น! รับเงินเข้าบัญชี +${amount.toLocaleString()} G 🪙`);
+            closeModal();
+        }
+
+        function buyItem(type, name, price, bgUrl = '') {
+            if (gameState.money < price) {
+                alert('เงินในบัญชีไม่พอซื้อไอเทมนี้');
+                return;
+            }
+            gameState.money -= price;
+            gameState.inventory.push(name);
+            if (type === 'bg') {
+                gameState.currentBg = bgUrl;
+            }
+            saveGame();
+            alert(`ซื้อ "${name}" สำเร็จ! ตรวจสอบได้ที่คลังเก็บของ`);
+            closeModal();
+        }
+
+        function redeemCode() {
+            const code = document.getElementById('giftcode-input').value.trim().toUpperCase();
+            if (code === 'POCKET2026') {
+                gameState.money += 2000;
+                gameState.salt += 100;
+                saveGame();
+                alert('🎁 แลกโค้ดสำเร็จ! ได้รับ +2,000 G และ +100 💎 เกลือ!');
+                closeModal();
+            } else {
+                alert('❌ โค้ดไม่ถูกต้องหรือหมดอายุแล้ว');
+            }
+        }
+
+        function adminAddCurrency(moneyAdd, saltAdd) {
+            gameState.money += moneyAdd;
+            gameState.salt += saltAdd;
+            saveGame();
+            alert(`🛠️ [Admin] เติมเงินสำเร็จ! (+${moneyAdd.toLocaleString()} G, +${saltAdd} 💎)`);
+            closeModal();
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('pocket_diary_user');
+            localStorage.removeItem('pocket_diary_role');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
