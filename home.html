@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หน้าหลัก - POCKET DIARY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #f0f7ff 50%, #fdf2f8 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(224, 231, 255, 0.6);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="min-h-screen w-full flex flex-col justify-between p-4 sm:p-8 text-gray-700">
+
+    <!-- แถบด้านบน (Navbar) -->
+    <header class="w-full max-w-4xl mx-auto flex justify-between items-center glass-card px-6 py-4 rounded-3xl shadow-sm">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-pink-100 flex items-center justify-center text-lg">
+                📖
+            </div>
+            <span class="font-bold text-gray-800 tracking-wide text-sm sm:text-base">POCKET DIARY</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span id="user-email-display" class="text-xs text-gray-500 hidden sm:inline">กำลังโหลด...</span>
+            <button id="logout-btn" class="px-4 py-2 bg-pink-50 hover:bg-pink-100 text-pink-600 font-medium text-xs rounded-xl transition cursor-pointer">
+                ออกจากระบบ
+            </button>
+        </div>
+    </header>
+
+    <!-- เนื้อหาหลักตรงกลาง -->
+    <main class="w-full max-w-4xl mx-auto my-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- การ์ดต้อนรับ -->
+        <div class="md:col-span-2 glass-card p-8 rounded-3xl shadow-xl shadow-pink-100/40 flex flex-col justify-between">
+            <div>
+                <span id="role-badge" class="px-3 py-1 bg-sky-100 text-sky-600 text-xs font-semibold rounded-full inline-block mb-4">ผู้ใช้งานทั่วไป</span>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">ยินดีต้อนรับสู่สมุดบันทึกส่วนตัว ✨</h1>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                    พื้นที่ปลอดภัยสำหรับบันทึกเรื่องราว ความรู้สึก และความทรงจำดีๆ ในทุกๆ วันของคุณ เริ่มต้นเขียนบันทึกแรกกันเลยไหม?
+                </p>
+            </div>
+            <div class="mt-8 flex flex-wrap gap-3">
+                <button onclick="alert('ฟีเจอร์เขียนไดอารี่กำลังจะมาเร็วๆ นี้ค่า!')" class="px-6 py-3 bg-gradient-to-r from-sky-400 to-pink-400 hover:opacity-90 text-white font-medium text-xs rounded-2xl shadow-md shadow-pink-200/50 transition cursor-pointer">
+                    ✍️ เขียนไดอารี่ใหม่
+                </button>
+                <!-- ปุ่มเมนูแอดมิน (จะแสดงเฉพาะแอดมินเท่านั้น) -->
+                <div id="admin-menu-container" class="hidden">
+                    <button onclick="alert('ยินดีต้อนรับสู่หน้าจัดการระบบ Admin!')" class="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-medium text-xs rounded-2xl shadow-md shadow-purple-200/50 transition cursor-pointer">
+                        🛠️ Admin Tools
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- การ์ดสถานะ / ปฏิทินย่อ -->
+        <div class="glass-card p-6 rounded-3xl shadow-xl shadow-sky-100/30 flex flex-col justify-between">
+            <div>
+                <h3 class="font-bold text-gray-800 text-sm mb-3">📅 บันทึกของฉัน</h3>
+                <div class="bg-white/60 p-4 rounded-2xl text-center">
+                    <p class="text-xs text-gray-400 mb-1">จำนวนวันที่บันทึก</p>
+                    <p class="text-2xl font-bold text-pink-500">0 วัน</p>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <p class="text-[11px] text-gray-400">POCKET DIARY v1.0 <br>Clean & Minimalist Edition</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- ฟุตเตอร์ -->
+    <footer class="w-full max-w-4xl mx-auto text-center text-xs text-gray-400 py-2">
+        Made with 💖 for Ciiderydem & Friends
+    </footer>
+
+    <script>
+        // ตรวจสอบ Session จาก localStorage เมื่อเปิดหน้า home.html
+        const userEmail = localStorage.getItem('pocket_diary_user');
+        const userRole = localStorage.getItem('pocket_diary_role');
+
+        // ถ้าไม่มีข้อมูลการล็อกอิน ให้ดีดกลับไปหน้า index.html ทันที
+        if (!userEmail) {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('user-email-display').textContent = userEmail;
+
+            // ตรวจสอบว่าเป็นแอดมินไหม เพื่อแสดงป้ายสถานะและเมนูพิเศษ
+            if (userRole === 'admin' || userEmail === 'ciiderydem@gmail.com') {
+                const roleBadge = document.getElementById('role-badge');
+                roleBadge.textContent = 'ผู้ดูแลระบบ (Admin)';
+                roleBadge.className = 'px-3 py-1 bg-purple-100 text-purple-600 text-xs font-semibold rounded-full inline-block mb-4';
+                
+                document.getElementById('admin-menu-container').classList.remove('hidden');
+            }
+        }
+
+        // ปุ่มออกจากระบบ
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('pocket_diary_user');
+            localStorage.removeItem('pocket_diary_role');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
