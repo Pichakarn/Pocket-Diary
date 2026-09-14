@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POCKET DIARY - นามบัตรส่วนตัว</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #fbfbfb;
+            color: #1a1a1a;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            overscroll-behavior-y: auto;
+        }
+        .royal-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        .royal-btn {
+            background: #111111;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .royal-btn:hover {
+            background: #2d2d2d;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="relative min-h-screen w-full flex flex-col justify-between select-none">
+
+    <!-- Top Navigation Bar -->
+    <div class="relative z-20 p-4 max-w-lg mx-auto w-full flex items-center justify-between">
+        <button onclick="window.location.href='phone.html'" class="royal-card px-4 py-2 rounded-2xl text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-sm">
+            <span>←</span> กลับโทรศัพท์
+        </button>
+        <h1 class="font-bold text-base text-neutral-900 flex items-center gap-2">
+            <span>🪪</span> นามบัตรของคุณ
+        </h1>
+        <div class="w-20"></div>
+    </div>
+
+    <!-- Main Content: การ์ดนามบัตร -->
+    <div class="relative z-10 flex-1 max-w-lg mx-auto w-full p-4 overflow-y-auto pb-8">
+        <div class="royal-card rounded-3xl p-6 shadow-xl flex flex-col items-center">
+            
+            <!-- รูปโปรไฟล์ & ปุ่มอัปโหลด -->
+            <div class="relative mb-4 group">
+                <img id="profile-img" src="https://res.cloudinary.com/demo/image/upload/v1312461200/sample.jpg" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md">
+                <label class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    เปลี่ยนรูป
+                    <input type="file" id="upload-profile-input" accept="image/*" class="hidden" onchange="uploadProfileImage(event)">
+                </label>
+            </div>
+
+            <!-- ข้อมูลที่แก้ไขได้: Name, Username, วันเกิด -->
+            <div class="w-full space-y-3 mb-6">
+                <div>
+                    <label class="text-[11px] font-semibold text-neutral-500 mb-1 block">ชื่อที่แสดง (Name)</label>
+                    <input type="text" id="input-name" class="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-xs focus:outline-none focus:border-neutral-900 bg-neutral-50" placeholder="กรอกชื่อของคุณ">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-semibold text-neutral-500 mb-1 block">Username (ใช้ออดเพื่อน)</label>
+                        <input type="text" id="input-username" class="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-xs focus:outline-none focus:border-neutral-900 bg-neutral-50" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-semibold text-neutral-500 mb-1 block">วันเกิด (วว/ดด)</label>
+                        <input type="text" id="input-birthday" class="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-xs focus:outline-none focus:border-neutral-900 bg-neutral-50" placeholder="วว/ดด">
+                    </div>
+                </div>
+                <button onclick="saveProfileData()" class="w-full py-2.5 rounded-xl text-xs font-semibold royal-btn cursor-pointer mt-2">
+                    บันทึกข้อมูลนามบัตร
+                </button>
+            </div>
+
+            <!-- ข้อมูลที่ไม่สามารถแก้ไขได้: สถิติตัวละครและสกิน (ดึงจากไดอารี่) -->
+            <div class="w-full border-t border-neutral-100 pt-4 mb-6">
+                <h3 class="text-xs font-bold text-neutral-900 mb-3">📊 สถิติการสะสม (จากไดอารี่)</h3>
+                <div class="grid grid-cols-2 gap-3 text-xs bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                    <div>จำนวนตัวละครที่มี: <span id="stat-total-chars" class="font-bold">0</span> ตัว</div>
+                    <div>สกินทั้งหมด: <span id="stat-total-skins" class="font-bold">0</span> สกิน</div>
+                </div>
+                <!-- แยกตามระดับ B, A, S, SR, SSR -->
+                <div class="grid grid-cols-5 gap-2 mt-3 text-center">
+                    <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-100">
+                        <div class="text-[10px] text-neutral-500 font-bold">B</div>
+                        <div id="stat-b" class="text-xs font-bold mt-1">0</div>
+                    </div>
+                    <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-100">
+                        <div class="text-[10px] text-neutral-500 font-bold">A</div>
+                        <div id="stat-a" class="text-xs font-bold mt-1">0</div>
+                    </div>
+                    <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-100">
+                        <div class="text-[10px] text-neutral-500 font-bold">S</div>
+                        <div id="stat-s" class="text-xs font-bold mt-1">0</div>
+                    </div>
+                    <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-100">
+                        <div class="text-[10px] text-neutral-500 font-bold">SR</div>
+                        <div id="stat-sr" class="text-xs font-bold mt-1">0</div>
+                    </div>
+                    <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-100">
+                        <div class="text-[10px] text-neutral-500 font-bold">SSR</div>
+                        <div id="stat-ssr" class="text-xs font-bold mt-1">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- การ์ดตัวละครสกินโปรด 3 สกินด้านล่างสุด -->
+            <div class="w-full border-t border-neutral-100 pt-4">
+                <h3 class="text-xs font-bold text-neutral-900 mb-3">⭐ สกินโปรด 3 อันดับ</h3>
+                <div class="grid grid-cols-3 gap-3" id="favorite-skins-container">
+                    <div class="h-28 rounded-2xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-xs text-neutral-400">โปรด 1</div>
+                    <div class="h-28 rounded-2xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-xs text-neutral-400">โปรด 2</div>
+                    <div class="h-28 rounded-2xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-xs text-neutral-400">โปรด 3</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Supabase & Config Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script>
+        let currentUserId = null;
+
+        async function initMyCard() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUserId = session.user.id;
+            loadProfileData();
+        }
+
+        async function loadProfileData() {
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', currentUserId)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    if (data.profile_image) document.getElementById('profile-img').src = data.profile_image;
+                    document.getElementById('input-name').value = data.name || '';
+                    document.getElementById('input-username').value = data.username || '';
+                    document.getElementById('input-birthday').value = data.birthday || '';
+                }
+
+                // โหลดสถิติต่างๆ (จำลองการดึงจากไดอารี่)
+                document.getElementById('stat-total-chars').innerText = '3';
+                document.getElementById('stat-total-skins').innerText = '5';
+                document.getElementById('stat-b').innerText = '2';
+                document.getElementById('stat-a').innerText = '1';
+                document.getElementById('stat-s').innerText = '1';
+                document.getElementById('stat-sr').innerText = '1';
+                document.getElementById('stat-ssr').innerText = '0';
+
+            } catch (err) {
+                console.error('Error loading profile:', err.message);
+            }
+        }
+
+        async function saveProfileData() {
+            const name = document.getElementById('input-name').value;
+            const username = document.getElementById('input-username').value;
+            const birthday = document.getElementById('input-birthday').value;
+
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .update({ name, username, birthday })
+                    .eq('id', currentUserId);
+
+                if (error) throw error;
+                showPopup('สำเร็จ', 'บันทึกข้อมูลนามบัตรเรียบร้อยแล้ว!', '✨');
+            } catch (err) {
+                showPopup('เกิดข้อผิดพลาด', err.message, '❌');
+            }
+        }
+
+        // จำลองการอัปโหลดรูปผ่าน Cloudinary
+        async function uploadProfileImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // ตัวอย่าง URL จำลองจาก Cloudinary (ระบบจริงเชื่อมต่อ Cloudinary API)
+            const mockCloudinaryUrl = URL.createObjectURL(file);
+            document.getElementById('profile-img').src = mockCloudinaryUrl;
+
+            try {
+                await supabase.from('users').update({ profile_image: mockCloudinaryUrl }).eq('id', currentUserId);
+                showPopup('สำเร็จ', 'อัปเดตรูปโปรไฟล์เรียบร้อยแล้ว!', '🖼️');
+            } catch (err) {
+                showPopup('เกิดข้อผิดพลาด', err.message, '❌');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initMyCard);
+    </script>
+</body>
+</html>
