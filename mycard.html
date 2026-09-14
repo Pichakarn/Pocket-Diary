@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POCKET DIARY - นามบัตร</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #fbfbfb;
+            color: #1a1a1a;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            overscroll-behavior-y: auto;
+            touch-action: pan-y;
+        }
+        .royal-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        .royal-btn {
+            background: #111111;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .royal-btn:hover {
+            background: #2d2d2d;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="relative min-h-screen w-full flex flex-col justify-between select-none pb-8">
+
+    <!-- Header -->
+    <div class="relative z-20 p-4 max-w-lg mx-auto w-full flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <button onclick="window.location.href='phone.html'" class="royal-card px-4 py-2 rounded-2xl text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-sm">
+                <span>←</span> กลับโทรศัพท์
+            </button>
+            <h1 class="font-bold text-base text-neutral-900 flex items-center gap-2">
+                <span>🪪</span> นามบัตรส่วนตัว
+            </h1>
+            <div class="w-20"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 flex-1 max-w-lg mx-auto w-full p-4 space-y-4">
+        
+        <!-- ข้อมูลโปรไฟล์หลัก & ส่วนที่แก้ไขได้ -->
+        <div class="royal-card rounded-3xl p-6 space-y-4 shadow-xl">
+            <div class="flex items-center gap-4">
+                <!-- รูปโปรไฟล์อัปโหลดผ่าน Cloudinary -->
+                <div class="relative w-20 h-20 rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0 shadow-inner">
+                    <img id="profile-img-preview" src="https://via.placeholder.com/150" alt="Profile" class="w-full h-full object-cover">
+                    <label class="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+                        เปลี่ยน
+                        <input type="file" id="profile-upload-input" accept="image/*" class="hidden" onchange="uploadProfileImage(event)">
+                    </label>
+                </div>
+                <div class="flex-1 space-y-2">
+                    <div>
+                        <label class="text-[10px] text-neutral-400 font-bold">ชื่อ (Name)</label>
+                        <input type="text" id="input-name" placeholder="ชื่อของคุณ" class="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-1.5 text-xs font-bold text-neutral-900 focus:outline-none focus:border-neutral-900">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-neutral-400 font-bold">ยูสเซอร์เนม (Username)</label>
+                        <input type="text" id="input-username" placeholder="Username สำหรับแอดเพื่อน" class="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-1.5 text-xs font-bold text-neutral-900 focus:outline-none focus:border-neutral-900">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <div>
+                    <label class="text-[10px] text-neutral-400 font-bold">วันเกิด (วว/ดด)</label>
+                    <input type="text" id="input-birthday" placeholder="เช่น 25/12" class="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs font-bold text-neutral-900 focus:outline-none focus:border-neutral-900 text-center">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="saveProfileChanges()" class="w-full py-2.5 rounded-xl text-xs font-bold royal-btn cursor-pointer shadow-md">
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ข้อมูลที่ไม่สามารถแก้ไขได้ (ดึงจากไดอารี่ Realtime) -->
+        <div class="royal-card rounded-3xl p-6 space-y-3 shadow-xl">
+            <h3 class="font-bold text-xs text-neutral-900 border-b border-neutral-100 pb-2">📊 สถิติการสะสมตัวละครและสกิน</h3>
+            
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="bg-neutral-50 p-3 rounded-2xl border border-neutral-200">
+                    <div class="text-[10px] text-neutral-500 font-medium">จำนวนตัวละครที่มี</div>
+                    <div id="stat-total-chars" class="text-base font-bold text-neutral-900 mt-0.5">0 ตัว</div>
+                </div>
+                <div class="bg-neutral-50 p-3 rounded-2xl border border-neutral-200">
+                    <div class="text-[10px] text-neutral-500 font-medium">สกินทั้งหมดที่มี</div>
+                    <div id="stat-total-skins" class="text-base font-bold text-neutral-900 mt-0.5">0 สกิน</div>
+                </div>
+            </div>
+
+            <!-- แยกตามระดับ B, A, S, SR, SSR -->
+            <div class="grid grid-cols-5 gap-2 pt-2 text-center text-xs">
+                <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-200">
+                    <div class="text-[9px] text-neutral-500 font-bold">B</div>
+                    <div id="stat-rank-b" class="font-bold text-neutral-900 text-sm mt-1">0</div>
+                </div>
+                <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-200">
+                    <div class="text-[9px] text-neutral-500 font-bold">A</div>
+                    <div id="stat-rank-a" class="font-bold text-neutral-900 text-sm mt-1">0</div>
+                </div>
+                <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-200">
+                    <div class="text-[9px] text-neutral-500 font-bold">S</div>
+                    <div id="stat-rank-s" class="font-bold text-neutral-900 text-sm mt-1">0</div>
+                </div>
+                <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-200">
+                    <div class="text-[9px] text-neutral-500 font-bold">SR</div>
+                    <div id="stat-rank-sr" class="font-bold text-neutral-900 text-sm mt-1">0</div>
+                </div>
+                <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-200">
+                    <div class="text-[9px] text-neutral-500 font-bold">SSR</div>
+                    <div id="stat-rank-ssr" class="font-bold text-neutral-900 text-sm mt-1">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- การ์ดตัวละครสกินโปรด 3 สกิน (ด้านล่างสุดของนามบัตร) -->
+        <div class="royal-card rounded-3xl p-6 space-y-3 shadow-xl">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-xs text-neutral-900">✨ สกินตัวละครโปรด 3 สกิน</h3>
+                <span class="text-[10px] text-neutral-400">เลือกโชว์บนนามบัตร</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3" id="favorite-skins-container">
+                <!-- Slot 1 -->
+                <div onclick="openFavoriteSelector(1)" class="w-full aspect-square bg-neutral-50 border-2 border-dashed border-neutral-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group">
+                    <img id="fav-slot-1-img" src="" class="w-full h-full object-cover hidden">
+                    <span id="fav-slot-1-plus" class="text-xl text-neutral-400">+</span>
+                    <span class="absolute bottom-1 text-[9px] bg-black/60 text-white px-2 py-0.5 rounded-full">ช่อง 1</span>
+                </div>
+                <!-- Slot 2 -->
+                <div onclick="openFavoriteSelector(2)" class="w-full aspect-square bg-neutral-50 border-2 border-dashed border-neutral-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group">
+                    <img id="fav-slot-2-img" src="" class="w-full h-full object-cover hidden">
+                    <span id="fav-slot-2-plus" class="text-xl text-neutral-400">+</span>
+                    <span class="absolute bottom-1 text-[9px] bg-black/60 text-white px-2 py-0.5 rounded-full">ช่อง 2</span>
+                </div>
+                <!-- Slot 3 -->
+                <div onclick="openFavoriteSelector(3)" class="w-full aspect-square bg-neutral-50 border-2 border-dashed border-neutral-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group">
+                    <img id="fav-slot-3-img" src="" class="w-full h-full object-cover hidden">
+                    <span id="fav-slot-3-plus" class="text-xl text-neutral-400">+</span>
+                    <span class="absolute bottom-1 text-[9px] bg-black/60 text-white px-2 py-0.5 rounded-full">ช่อง 3</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Popup เลือกสกินโปรด (ใช้ popup น่ารักๆ แทนกล่องข้อความธรรมดา) -->
+    <div id="skin-selector-popup" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="royal-card w-full max-w-sm rounded-3xl p-6 relative flex flex-col shadow-2xl max-h-[80vh]">
+            <div class="flex items-center justify-between pb-3 border-b border-neutral-100">
+                <h3 class="font-bold text-xs text-neutral-900">✨ เลือกสกินสำหรับช่องโปรด</h3>
+                <button onclick="closeSkinSelector()" class="text-xs font-bold text-neutral-400 hover:text-neutral-900">✕ ปิด</button>
+            </div>
+            <div id="owned-skins-grid" class="grid grid-cols-3 gap-3 overflow-y-auto py-4 flex-1">
+                <!-- รายการสกินที่เรามีจะถูกเรนเดอร์ตรงนี้ -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup แจ้งเตือนทั่วไป (ตามกติกา: เปลี่ยนช่องข้อความให้เป็น popup น่ารักๆ เสมอ) -->
+    <div id="alert-popup" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="royal-card w-full max-w-xs rounded-3xl p-6 relative flex flex-col items-center shadow-2xl text-center space-y-3">
+            <div id="alert-icon" class="text-3xl mb-1">✨</div>
+            <h3 id="alert-title" class="font-bold text-sm text-neutral-900">แจ้งเตือน</h3>
+            <p id="alert-message" class="text-xs text-neutral-600">ข้อความแจ้งเตือน</p>
+            <button onclick="closeAlertPopup()" class="w-full py-2 rounded-xl text-xs font-bold royal-btn cursor-pointer mt-2">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- Supabase & Config Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script>
+        let currentUserId = null;
+        let uploadedProfileUrl = "";
+        let selectedFavSlot = null;
+        let userOwnedSkins = [];
+        let currentFavSkins = [null, null, null];
+
+        async function initMyCard() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUserId = session.user.id;
+            await loadUserProfile();
+            await loadUserDiaryStats();
+        }
+
+        async function loadUserProfile() {
+            const { data: user, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', currentUserId)
+                .single();
+
+            if (user) {
+                document.getElementById('input-name').value = user.name || '';
+                document.getElementById('input-username').value = user.username || '';
+                document.getElementById('input-birthday').value = user.birthday || '';
+                if (user.profile_img) {
+                    uploadedProfileUrl = user.profile_img;
+                    document.getElementById('profile-img-preview').src = user.profile_img;
+                }
+                if (user.favorite_skins && Array.isArray(user.favorite_skins)) {
+                    currentFavSkins = user.favorite_skins;
+                    renderFavoriteSkinsUI();
+                }
+            }
+        }
+
+        // อัปโหลดรูปโปรไฟล์ผ่าน Cloudinary
+        async function uploadProfileImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_PRESET);
+
+            showAlert('กำลังอัปโหลด', 'กรุณารอสักครู่ กำลังอัปโหลดรูปภาพผ่านระบบ...', '⏳');
+
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.secure_url) {
+                    uploadedProfileUrl = data.secure_url;
+                    document.getElementById('profile-img-preview').src = uploadedProfileUrl;
+                    showAlert('อัปโหลดสำเร็จ', 'อัปโหลดรูปโปรไฟล์เรียบร้อยแล้ว', '✨');
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (err) {
+                console.error('Cloudinary error:', err);
+                showAlert('อัปโหลดไม่สำเร็จ', 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ', '❌');
+            }
+        }
+
+        async function saveProfileChanges() {
+            const name = document.getElementById('input-name').value.trim();
+            const username = document.getElementById('input-username').value.trim();
+            const birthday = document.getElementById('input-birthday').value.trim();
+
+            const { error } = await supabase
+                .from('users')
+                .update({
+                    name: name,
+                    username: username,
+                    birthday: birthday,
+                    profile_img: uploadedProfileUrl,
+                    favorite_skins: currentFavSkins
+                })
+                .eq('id', currentUserId);
+
+            if (error) {
+                showAlert('บันทึกไม่สำเร็จ', error.message, '❌');
+            } else {
+                showAlert('สำเร็จ', 'บันทึกข้อมูลนามบัตรเรียบร้อยแล้ว', '🎉');
+            }
+        }
+
+        // ดึงสถิติตัวละครและสกินจากไดอารี่ Realtime
+        async function loadUserDiaryStats() {
+            const { data: chars } = await supabase
+                .from('user_characters')
+                .select('*')
+                .eq('user_id', currentUserId);
+
+            if (chars) {
+                userOwnedSkins = chars;
+                const totalSkins = chars.length;
+                // คำนวณจำนวนตัวละครที่ไม่ซ้ำกัน
+                const uniqueChars = new Set(chars.map(c => c.character_name)).size;
+
+                document.getElementById('stat-total-chars').innerText = `${uniqueChars} ตัว`;
+                document.getElementById('stat-total-skins').innerText = `${totalSkins} สกิน`;
+
+                let countB = 0, countA = 0, countS = 0, countSR = 0, countSSR = 0;
+                chars.forEach(c => {
+                    const rank = (c.skin_rank || 'B').toUpperCase();
+                    if (rank === 'B') countB++;
+                    else if (rank === 'A') countA++;
+                    else if (rank === 'S') countS++;
+                    else if (rank === 'SR') countSR++;
+                    else if (rank === 'SSR') countSSR++;
+                });
+
+                document.getElementById('stat-rank-b').innerText = countB;
+                document.getElementById('stat-rank-a').innerText = countA;
+                document.getElementById('stat-rank-s').innerText = countS;
+                document.getElementById('stat-rank-sr').innerText = countSR;
+                document.getElementById('stat-rank-ssr').innerText = countSSR;
+            }
+        }
+
+        function renderFavoriteSkinsUI() {
+            for (let i = 1; i <= 3; i++) {
+                const skin = currentFavSkins[i-1];
+                const imgEl = document.getElementById(`fav-slot-${i}-img`);
+                const plusEl = document.getElementById(`fav-slot-${i}-plus`);
+                if (skin && skin.image_url) {
+                    imgEl.src = skin.image_url;
+                    imgEl.classList.remove('hidden');
+                    plusEl.classList.add('hidden');
+                } else {
+                    imgEl.classList.add('hidden');
+                    plusEl.classList.remove('hidden');
+                }
+            }
+        }
+
+        function openFavoriteSelector(slotIndex) {
+            selectedFavSlot = slotIndex;
+            const grid = document.getElementById('owned-skins-grid');
+            grid.innerHTML = '';
+
+            if (userOwnedSkins.length === 0) {
+                grid.innerHTML = '<div class="col-span-3 text-center text-xs text-neutral-400 py-6">คุณยังไม่มีสกินตัวละครในไดอารี่</div>';
+            } else {
+                userOwnedSkins.forEach(skin => {
+                    const div = document.createElement('div');
+                    div.className = 'w-full aspect-square bg-neutral-50 border border-neutral-200 rounded-2xl overflow-hidden cursor-pointer relative group flex flex-col items-center justify-center p-1';
+                    div.innerHTML = `
+                        <img src="${skin.image_url || skin.full_image_url}" class="w-full h-full object-cover rounded-xl">
+                        <span class="absolute bottom-1 bg-black/70 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">${skin.skin_rank || 'B'}</span>
+                    `;
+                    div.onclick = () => selectSkinForFavorite(skin);
+                    grid.appendChild(div);
+                });
+            }
+
+            document.getElementById('skin-selector-popup').classList.remove('hidden');
+        }
+
+        function closeSkinSelector() {
+            document.getElementById('skin-selector-popup').classList.add('hidden');
+        }
+
+        function selectSkinForFavorite(skin) {
+            currentFavSkins[selectedFavSlot - 1] = {
+                id: skin.id,
+                character_name: skin.character_name,
+                image_url: skin.image_url || skin.full_image_url,
+                skin_rank: skin.skin_rank
+            };
+            renderFavoriteSkinsUI();
+            closeSkinSelector();
+        }
+
+        function showAlert(title, message, icon = '✨') {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-message').innerText = message;
+            document.getElementById('alert-icon').innerText = icon;
+            document.getElementById('alert-popup').classList.remove('hidden');
+        }
+
+        function closeAlertPopup() {
+            document.getElementById('alert-popup').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', initMyCard);
+    </script>
+</body>
+</html>
