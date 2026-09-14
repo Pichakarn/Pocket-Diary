@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POCKET DIARY - กาชา</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #fbfbfb;
+            color: #1a1a1a;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            overscroll-behavior-y: auto;
+            touch-action: pan-y;
+        }
+        .royal-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        .royal-btn {
+            background: #111111;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .royal-btn:hover {
+            background: #2d2d2d;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="relative min-h-screen w-full flex flex-col justify-between select-none pb-8">
+
+    <!-- Header -->
+    <div class="relative z-20 p-4 max-w-lg mx-auto w-full flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <button onclick="window.location.href='home.html'" class="royal-card px-4 py-2 rounded-2xl text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-sm">
+                <span>←</span> กลับหน้าหลัก
+            </button>
+            <h1 class="font-bold text-base text-neutral-900 flex items-center gap-2">
+                <span>⭐</span> สุ่มกาชา
+            </h1>
+            <div id="user-balance-badge" class="royal-card px-3 py-1.5 rounded-2xl text-xs font-bold text-neutral-900 flex items-center gap-1.5 shadow-sm">
+                <span>🪙</span> <span id="header-coins">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 flex-1 max-w-lg mx-auto w-full p-4 space-y-4">
+        
+        <!-- แถบเลือกตู้กาชา (4 ตู้หลัก + 1 ตู้ชั่วคราว) -->
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <button onclick="switchGachaTab('permanent')" id="tab-permanent" class="gacha-tab px-4 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all royal-btn">ตู้ถาวร</button>
+            <button onclick="switchGachaTab('old_season')" id="tab-old_season" class="gacha-tab px-4 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all bg-neutral-100 text-neutral-600">ซีซั่นเก่า</button>
+            <button onclick="switchGachaTab('season')" id="tab-season" class="gacha-tab px-4 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all bg-neutral-100 text-neutral-600">ประจำฤดูกาล</button>
+            <button onclick="switchGachaTab('monthly')" id="tab-monthly" class="gacha-tab px-4 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all bg-neutral-100 text-neutral-600">ตู้รายเดือน</button>
+            <button onclick="switchGachaTab('character')" id="tab-character" class="gacha-tab px-4 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all bg-neutral-100 text-neutral-600 hidden">ตู้ตัวละครใหม่</button>
+        </div>
+
+        <!-- หน้าตู้กาชาแสดงผล (หน้าปกตู้) -->
+        <div class="royal-card rounded-3xl p-6 relative flex flex-col items-center shadow-xl space-y-4 overflow-hidden">
+            <div id="gacha-banner-container" class="w-full aspect-[4/3] bg-neutral-100 rounded-2xl overflow-hidden relative shadow-inner flex items-center justify-center">
+                <!-- รูปหน้าตู้จะถูกเรนเดอร์ที่นี่ -->
+                <img id="gacha-banner-img" src="https://via.placeholder.com/400x300" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
+                    <span id="gacha-title-label" class="text-white font-bold text-sm">ตู้ถาวร (Permanent)</span>
+                </div>
+            </div>
+
+            <div class="w-full flex gap-3">
+                <button onclick="performGacha(1)" class="flex-1 py-3 rounded-2xl text-xs font-bold royal-btn cursor-pointer shadow-md flex items-center justify-center gap-1">
+                    <span>⭐</span> สุ่ม 1 ครั้ง (100 เหรียญ)
+                </button>
+                <button onclick="performGacha(10)" class="flex-1 py-3 rounded-2xl text-xs font-bold bg-neutral-900 text-white hover:bg-neutral-800 cursor-pointer shadow-md flex items-center justify-center gap-1">
+                    <span>🌟</span> สุ่ม 10 ครั้ง (1,000 เหรียญ)
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Popup ผลลัพธ์การสุ่มกาชา (แสดงรูปไอเท็ม/สกิน และตัวละครที่ได้) -->
+    <div id="gacha-result-popup" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);">
+        <div class="royal-card w-full max-w-sm rounded-3xl p-6 relative flex flex-col items-center shadow-2xl text-center space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="text-3xl">🎉</div>
+            <h3 class="font-bold text-sm text-neutral-900">ผลการสุ่มกาชา</h3>
+            <div id="gacha-result-grid" class="grid grid-cols-2 gap-3 w-full py-2">
+                <!-- รายการผลลัพธ์จะแสดงตรงนี้ -->
+            </div>
+            <button onclick="closeGachaResultPopup()" class="w-full py-3 rounded-2xl text-xs font-bold royal-btn cursor-pointer">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- Popup แจ้งเตือนทั่วไป -->
+    <div id="alert-popup" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="royal-card w-full max-w-xs rounded-3xl p-6 relative flex flex-col items-center shadow-2xl text-center space-y-3">
+            <div id="alert-icon" class="text-3xl mb-1">✨</div>
+            <h3 id="alert-title" class="font-bold text-sm text-neutral-900">แจ้งเตือน</h3>
+            <p id="alert-message" class="text-xs text-neutral-600">ข้อความแจ้งเตือน</p>
+            <button onclick="closeAlertPopup()" class="w-full py-2 rounded-xl text-xs font-bold royal-btn cursor-pointer mt-2">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- Supabase & Config Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script>
+        let currentUserId = null;
+        let activeTab = 'permanent';
+        let userCoins = 0;
+        let gachaPools = {
+            permanent: [],
+            old_season: [],
+            season: [],
+            monthly: [],
+            character: []
+        };
+
+        async function initGacha() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUserId = session.user.id;
+            await loadUserAccountData();
+            await loadGachaPoolsFromAdmin();
+            updateGachaBannerDisplay();
+        }
+
+        async function loadUserAccountData() {
+            const { data: user } = await supabase.from('users').select('coins, cookies').eq('id', currentUserId).single();
+            if (user) {
+                userCoins = user.coins || 0;
+                document.getElementById('header-coins').innerText = userCoins.toLocaleString();
+            }
+        }
+
+        // โหลดข้อมูลตู้กาชาที่แอดมินตั้งค่าไว้จาก Supabase
+        async function loadGachaPoolsFromAdmin() {
+            const { data: pools } = await supabase.from('gacha_pools').select('*');
+            if (pools) {
+                pools.forEach(p => {
+                    if (gachaPools[p.pool_type]) {
+                        gachaPools[p.pool_type] = p.items || [];
+                    }
+                });
+
+                // ตรวจสอบตู้ตัวละครใหม่ว่าหมดอายุหรือยัง
+                const charPoolMeta = pools.find(p => p.pool_type === 'character');
+                if (charPoolMeta && charPoolMeta.expiry_date) {
+                    const expiry = new Date(charPoolMeta.expiry_date);
+                    const now = new Date();
+                    if (now <= expiry) {
+                        document.getElementById('tab-character').classList.remove('hidden');
+                    }
+                }
+            }
+        }
+
+        function switchGachaTab(tabKey) {
+            activeTab = tabKey;
+            document.querySelectorAll('.gacha-tab').forEach(btn => {
+                btn.className = 'gacha-tab px-4 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all bg-neutral-100 text-neutral-600';
+            });
+            document.getElementById(`tab-${tabKey}`).className = 'gacha-tab px-4 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all royal-btn';
+            updateGachaBannerDisplay();
+        }
+
+        function updateGachaBannerDisplay() {
+            const bannerImg = document.getElementById('gacha-banner-img');
+            const titleLabel = document.getElementById('gacha-title-label');
+            const pool = gachaPools[activeTab] || [];
+
+            let titleName = 'ตู้ถาวร (Permanent)';
+            if (activeTab === 'old_season') titleName = 'ตู้ซีซั่นเก่า (Old Season)';
+            else if (activeTab === 'season') titleName = 'ตู้ประจำฤดูกาล (Season Gacha)';
+            else if (activeTab === 'monthly') titleName = 'ตู้รายเดือน (Monthly Gacha)';
+            else if (activeTab === 'character') titleName = 'ตู้ตัวละครใหม่ (Character Gacha)';
+
+            titleLabel.innerText = titleName;
+
+            // ค้นหาสกินระดับ SR หรือ S มาแสดงหน้าตู้
+            const featureItem = pool.find(i => i.type === 'character' && (i.skin_rank === 'SR' || i.skin_rank === 'S' || i.skin_rank === 'SSR')) || pool[0];
+            if (featureItem && (featureItem.image_url || featureItem.full_image_url)) {
+                bannerImg.src = featureItem.full_image_url || featureItem.image_url;
+            } else {
+                bannerImg.src = 'https://via.placeholder.com/400x300';
+            }
+        }
+
+        async function performGacha(times) {
+            const cost = times * 100;
+            if (userCoins < cost) {
+                showAlert('เหรียญไม่พอ', `คุณต้องการ ${cost} เหรียญ แต่มี ${userCoins} เหรียญ`, '🪙');
+                return;
+            }
+
+            const pool = gachaPools[activeTab] || [];
+            if (pool.length === 0) {
+                showAlert('ตู้ว่างเปล่า', 'ยังไม่มีไอเท็มหรือสกินในตู้นี้ กรุณารอแอดมินอัปเดตตู้', '⚠️');
+                return;
+            }
+
+            // หักเงินผู้ใช้ทันที
+            const newCoins = userCoins - cost;
+            await supabase.from('users').update({ coins: newCoins }).eq('id', currentUserId);
+            userCoins = newCoins;
+            document.getElementById('header-coins').innerText = userCoins.toLocaleString();
+
+            // สุ่มผลลัพธ์
+            const results = [];
+            for (let i = 0; i < times; i++) {
+                const randomItem = pool[Math.floor(Math.random() * pool.length)];
+                results.push(randomItem);
+            }
+
+            // ประมวลผลสิ่งที่ได้ (บันทึกลง Diary, Inventory หรือ คุกกี้)
+            const resultGrid = document.getElementById('gacha-result-grid');
+            resultGrid.innerHTML = '';
+
+            for (const item of results) {
+                if (item.type === 'character') {
+                    // ตรวจสอบว่ามีสกินนี้ในไดอารี่หรือยัง
+                    const { data: existing } = await supabase
+                        .from('user_characters')
+                        .select('*')
+                        .eq('user_id', currentUserId)
+                        .eq('character_name', item.name)
+                        .eq('skin_rank', item.skin_rank || 'B')
+                        .single();
+
+                    if (existing) {
+                        // ถ้ามีตัวละคร/สกินซ้ำ ได้รับ คุกกี้ (เกลือ) สะสมแทน
+                        const { data: acc } = await supabase.from('users').select('cookies').eq('id', currentUserId).single();
+                        const newCookies = (acc.cookies || 0) + 1;
+                        await supabase.from('users').update({ cookies: newCookies }).eq('id', currentUserId);
+
+                        item.isDuplicate = true;
+                        item.rewardNote = 'ได้รับซ้ำ! เปลี่ยนเป็น 🍪 คุกกี้ 1 ชิ้น';
+                    } else {
+                        // บันทึกลงไดอารี่ว่ามีสกินนี้แล้ว
+                        await supabase.from('user_characters').insert([{
+                            user_id: currentUserId,
+                            character_name: item.name,
+                            skin_rank: item.skin_rank || 'B',
+                            image_url: item.image_url,
+                            full_image_url: item.full_image_url || item.image_url
+                        }]);
+                        item.rewardNote = `ปลดล็อกสกิน ${item.skin_rank || 'B'} ในไดอารี่แล้ว!`;
+                    }
+                } else if (item.type === 'background') {
+                    // ส่งไปเก็บใน Inventory หมวด Background
+                    await supabase.from('user_backgrounds').insert([{
+                        user_id: currentUserId,
+                        image_url: item.image_url,
+                        name: item.name || 'พื้นหลังพิเศษ'
+                    }]);
+                    item.rewardNote = 'บันทึกลง Inventory (Background)';
+                } else {
+                    // ส่งไปเก็บใน Inventory หมวด Item
+                    await supabase.from('user_items').insert([{
+                        user_id: currentUserId,
+                        name: item.name || 'ไอเท็มกาชา',
+                        image_url: item.image_url,
+                        type: item.item_type || 'ของทั่วไป',
+                        property: item.property || 'ได้จากการสุ่มกาชา'
+                    }]);
+                    item.rewardNote = 'บันทึกลง Inventory (Item)';
+                }
+
+                // สร้างการแสดงผลใน Popup
+                const div = document.createElement('div');
+                div.className = 'royal-card p-3 rounded-2xl flex flex-col items-center text-center space-y-1 bg-white border border-neutral-200';
+                div.innerHTML = `
+                    <div class="w-16 h-16 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
+                        <img src="${item.image_url || item.full_image_url}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="font-bold text-xs text-neutral-900 truncate w-full">${item.name || 'ไอเท็ม'}</div>
+                    <div class="text-[9px] text-neutral-500">${item.rewardNote}</div>
+                `;
+                resultGrid.appendChild(div);
+            }
+
+            document.getElementById('gacha-result-popup').classList.remove('hidden');
+        }
+
+        function closeGachaResultPopup() {
+            document.getElementById('gacha-result-popup').classList.add('hidden');
+        }
+
+        function showAlert(title, message, icon = '✨') {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-message').innerText = message;
+            document.getElementById('alert-icon').innerText = icon;
+            document.getElementById('alert-popup').classList.remove('hidden');
+        }
+
+        function closeAlertPopup() {
+            document.getElementById('alert-popup').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', initGacha);
+    </script>
+</body>
+</html>
