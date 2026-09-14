@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POCKET DIARY - ตู้กาชา</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #fbfbfb;
+            color: #1a1a1a;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            overscroll-behavior-y: auto;
+        }
+        .royal-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        .royal-btn {
+            background: #111111;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .royal-btn:hover {
+            background: #2d2d2d;
+            transform: translateY(-1px);
+        }
+        .tab-active {
+            background: #111111 !important;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen w-full flex flex-col justify-between select-none">
+
+    <!-- Top Navigation Bar & Balance -->
+    <div class="relative z-20 p-4 max-w-lg mx-auto w-full flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <button onclick="window.location.href='home.html'" class="royal-card px-4 py-2 rounded-2xl text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-sm">
+                <span>←</span> กลับหน้าหลัก
+            </button>
+            <h1 class="font-bold text-base text-neutral-900 flex items-center gap-2">
+                <span>⭐</span> ตู้กาชา
+            </h1>
+            <div class="royal-card px-3 py-1.5 rounded-xl flex items-center gap-3 text-xs shadow-sm">
+                <span class="flex items-center gap-1 font-bold">🪙 <span id="user-coins">0</span></span>
+                <span class="flex items-center gap-1 font-bold border-l pl-3 border-neutral-200">🍪 <span id="user-cookies">0</span></span>
+            </div>
+        </div>
+
+        <!-- 5 ตู้กาชา (Permanent, Old Season, Season Gacha, Month Gacha, Character Gacha) -->
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <button onclick="switchBanner('permanent')" id="btn-permanent" class="tab-active px-4 py-2 rounded-2xl text-xs font-medium whitespace-nowrap royal-card transition-all cursor-pointer">ตู้ถาวร</button>
+            <button onclick="switchBanner('old_season')" id="btn-old_season" class="px-4 py-2 rounded-2xl text-xs font-medium whitespace-nowrap royal-card transition-all cursor-pointer">ตู้ซีซั่นเก่า</button>
+            <button onclick="switchBanner('season')" id="btn-season" class="px-4 py-2 rounded-2xl text-xs font-medium whitespace-nowrap royal-card transition-all cursor-pointer">ตู้ประจำฤดูกาล</button>
+            <button onclick="switchBanner('month')" id="btn-month" class="px-4 py-2 rounded-2xl text-xs font-medium whitespace-nowrap royal-card transition-all cursor-pointer">ตู้รายเดือน</button>
+            <button onclick="switchBanner('character')" id="btn-character" class="px-4 py-2 rounded-2xl text-xs font-medium whitespace-nowrap royal-card transition-all cursor-pointer">ตู้ตัวละครใหม่</button>
+        </div>
+    </div>
+
+    <!-- Main Banner Area: แสดงภาพตู้/หน้าตู้ และปุ่มสุ่ม -->
+    <div class="relative z-10 flex-1 max-w-lg mx-auto w-full p-4 flex flex-col justify-center items-center">
+        <div class="royal-card w-full rounded-3xl p-6 flex flex-col items-center shadow-xl text-center relative overflow-hidden">
+            
+            <!-- ป้ายชื่อตู้ -->
+            <div id="banner-title" class="font-bold text-lg text-neutral-900 mb-2">ตู้ถาวร (Permanent)</div>
+            <p id="banner-desc" class="text-xs text-neutral-500 mb-6">ตู้สุ่มถาวร รวบรวมสกินและไอเท็มพื้นฐาน</p>
+
+            <!-- รูปภาพตัวอย่างหน้าตู้ (แสดงสกิน S/SR หรือภาพเด่นประจำตู้) -->
+            <div class="relative w-full h-64 flex items-center justify-center bg-neutral-50 rounded-2xl mb-6 border border-neutral-100 overflow-hidden">
+                <img id="banner-preview-img" src="https://res.cloudinary.com/demo/image/upload/v1312461200/sample.jpg" alt="Banner Preview" class="max-h-56 w-auto object-contain drop-shadow-lg">
+            </div>
+
+            <!-- ปุ่มกดสุ่ม 1 ครั้ง และ 10 ครั้ง -->
+            <div class="grid grid-cols-2 gap-4 w-full">
+                <button onclick="executeGacha(1)" class="py-3 rounded-2xl text-xs font-bold royal-card border border-neutral-300 hover:bg-neutral-100 cursor-pointer">
+                    สุ่ม 1 ครั้ง (100 🪙)
+                </button>
+                <button onclick="executeGacha(10)" class="py-3 rounded-2xl text-xs font-bold royal-btn cursor-pointer">
+                    สุ่ม 10 ครั้ง (1,000 🪙)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ผลลัพธ์การสุ่ม (แสดงรูปไอเท็ม/สกินที่ได้) -->
+    <div id="gacha-result-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);">
+        <div class="royal-card w-full max-w-md rounded-3xl p-6 relative flex flex-col items-center shadow-2xl text-center">
+            <h3 class="font-bold text-base text-neutral-900 mb-4">🎉 ผลลัพธ์การสุ่มกาชา</h3>
+            
+            <div id="gacha-result-container" class="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto w-full p-2 mb-6">
+                <!-- รายการผลลัพธ์การสุ่มจะแสดงตรงนี้ -->
+            </div>
+
+            <button onclick="closeGachaModal()" class="w-full py-3 rounded-2xl text-xs font-bold royal-btn cursor-pointer">รับทราบ</button>
+        </div>
+    </div>
+
+    <!-- Supabase & Config Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script>
+        let currentUserId = null;
+        let activeBanner = 'permanent';
+        let userCoins = 0;
+        let userCookies = 0;
+
+        const bannerData = {
+            permanent: { title: 'ตู้ถาวร (Permanent)', desc: 'ตู้สุ่มถาวร รวบรวมสกินและไอเท็มพื้นฐานตลอดกาล', img: 'https://res.cloudinary.com/demo/image/upload/v1312461200/sample.jpg' },
+            old_season: { title: 'ตู้ซีซั่นเก่า (Old Season)', desc: 'รวบรวมสกินและไอเท็มจากตู้รายเดือนที่หมดอายุไปแล้ว', img: 'https://res.cloudinary.com/demo/image/upload/v1312461200/sample.jpg' },
+            season: { title: 'ตู้ประจำฤดูกาล (Season Gacha)', desc: 'ตู้พิเศษประจำฤดูกาล เปลี่ยนเซ็ตไอเท็มใหม่ทุกซีซั่น', img: 'https://res.cloudinary.com/demo/image/upload/v1312461200/sample.jpg' },
+            month: { title: 'ตู้รายเดือน (Month Gacha)', desc: 'ตู้กาชาพิเศษอัปเดตใหม่ทุกๆ 1 เดือน', img: 'https://res.cloudinary.com/demo/image/upload/v1312461200/sample.jpg' },
+            character: { title: 'ตู้ตัวละครใหม่ (Character Gacha)', desc: 'ตู้สะสมตัวละครใหม่ล่าสุด ระยะเวลาจำกัด 1 เดือน', img: 'https://res.cloudinary.com/demo/image/upload/v1312461200/sample.jpg' }
+        };
+
+        async function initGacha() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUserId = session.user.id;
+            loadUserData();
+        }
+
+        async function loadUserData() {
+            const { data, error } = await supabase.from('users').select('coins, cookies').eq('id', currentUserId).single();
+            if (data) {
+                userCoins = data.coins || 0;
+                userCookies = data.cookies || 0;
+                document.getElementById('user-coins').innerText = userCoins;
+                document.getElementById('user-cookies').innerText = userCookies;
+            }
+        }
+
+        function switchBanner(bannerKey) {
+            activeBanner = bannerKey;
+            document.querySelectorAll('.tab-active').forEach(btn => btn.classList.remove('tab-active'));
+            document.getElementById(`btn-${bannerKey}`).classList.add('tab-active');
+
+            const info = bannerData[bannerKey];
+            document.getElementById('banner-title').innerText = info.title;
+            document.getElementById('banner-desc').innerText = info.desc;
+            document.getElementById('banner-preview-img').src = info.img;
+        }
+
+        // จำลองระบบสุ่มกาชา (ตัดเหรียญ และสุ่มไอเท็ม/สกิน)
+        async function executeGacha(times) {
+            const cost = times * 100;
+            if (userCoins < cost) {
+                showPopup('เหรียญไม่พอ', `คุณต้องการ ${cost} เหรียญ แต่มี ${userCoins} เหรียญ`, '🪙');
+                return;
+            }
+
+            try {
+                // หักเงินในบัญชีจริงผ่าน Supabase
+                const newCoins = userCoins - cost;
+                const { error: updateErr } = await supabase.from('users').update({ coins: newCoins }).eq('id', currentUserId);
+                if (updateErr) throw updateErr;
+
+                userCoins = newCoins;
+                document.getElementById('user-coins').innerText = userCoins;
+
+                // จำลองไอเท็มที่สุ่มได้ (ระบบจริงจะดึงข้อมูลจากตู้ในฐานข้อมูล Admin)
+                const mockResults = [];
+                for (let i = 0; i < times; i++) {
+                    mockResults.push({
+                        name: i % 2 === 0 ? 'สกินตัวละครพิเศษ' : 'ไอเท็มดอกกุหลาบ',
+                        image: 'https://res.cloudinary.com/demo/image/upload/v1312461200/sample.jpg',
+                        type: i % 2 === 0 ? 'skin' : 'item',
+                        rarity: 'S'
+                    });
+                }
+
+                displayGachaResults(mockResults);
+
+            } catch (err) {
+                showPopup('เกิดข้อผิดพลาด', err.message, '❌');
+            }
+        }
+
+        function displayGachaResults(results) {
+            const container = document.getElementById('gacha-result-container');
+            container.innerHTML = '';
+
+            results.forEach(res => {
+                const itemBox = document.createElement('div');
+                itemBox.className = 'bg-neutral-50 p-3 rounded-2xl border border-neutral-200 flex flex-col items-center justify-center';
+                itemBox.innerHTML = `
+                    <img src="${res.image}" alt="${res.name}" class="h-20 w-auto object-contain mb-2">
+                    <span class="font-bold text-[11px] text-neutral-900">${res.name}</span>
+                    <span class="text-[9px] text-amber-600 font-semibold mt-0.5">ระดับ ${res.rarity}</span>
+                `;
+                container.appendChild(itemBox);
+            });
+
+            document.getElementById('gacha-result-modal').classList.remove('hidden');
+        }
+
+        function closeGachaModal() {
+            document.getElementById('gacha-result-modal').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', initGacha);
+    </script>
+</body>
+</html>
