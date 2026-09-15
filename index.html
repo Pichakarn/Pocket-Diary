@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POCKET DIARY - เข้าสู่ระบบ / สมัครสมาชิก</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome สำหรับไอคอน -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+</head>
+<body class="bg-neutral-950 text-neutral-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- กรอบหน้าต่าง UI สไตล์ POCKET DIARY + V-Link Flow -->
+    <div class="w-full max-w-md bg-white text-neutral-900 border border-neutral-200 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        
+        <!-- Header Title -->
+        <div class="text-center mb-6 relative z-10">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-neutral-900 text-white text-xl shadow-lg mb-3">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-wider text-neutral-900">POCKET DIARY</h1>
+            <p id="form-subtitle" class="text-xs text-neutral-500 mt-1">ยินดีต้อนรับสู่โลกแห่งความทรงจำของคุณ</p>
+        </div>
+
+        <!-- Tab Switcher (สลับระหว่าง Login / Register แบบ V-Link) -->
+        <div class="flex bg-neutral-100 p-1.5 rounded-xl border border-neutral-200 mb-6 relative z-10">
+            <button id="tab-login" type="button" onclick="switchTab('login')" class="flex-1 py-2.5 text-xs font-bold rounded-lg bg-neutral-900 text-white transition-all shadow-md cursor-pointer">เข้าสู่ระบบ</button>
+            <button id="tab-register" type="button" onclick="switchTab('register')" class="flex-1 py-2.5 text-xs font-bold rounded-lg text-neutral-500 hover:text-neutral-900 transition-all cursor-pointer">สมัครสมาชิก</button>
+        </div>
+
+        <!-- ฟอร์มเข้าสู่ระบบ / สมัครสมาชิก -->
+        <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-4 relative z-10">
+            
+            <!-- ช่องกรอกชื่อผู้ใช้ (จะแสดงเฉพาะตอนกด สมัครสมาชิก) -->
+            <div id="name-field-container" class="hidden space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-700 mb-1.5">ชื่อผู้ใช้ (Username)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-neutral-400 text-sm"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="username" class="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-neutral-900 text-neutral-900 transition-all placeholder:text-neutral-400" placeholder="ตั้งชื่อ Username ของคุณ">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-700 mb-1.5">ชื่อที่แสดง (Display Name)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-neutral-400 text-sm"><i class="fa-solid fa-id-badge"></i></span>
+                        <input type="text" id="display_name" class="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-neutral-900 text-neutral-900 transition-all placeholder:text-neutral-400" placeholder="ชื่อที่คนอื่นจะเห็นในเกม/ไดอารี่">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">อีเมล (Email)</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-neutral-400 text-sm"><i class="fa-solid fa-envelope"></i></span>
+                    <input type="email" id="email" required class="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-neutral-900 text-neutral-900 transition-all placeholder:text-neutral-400" placeholder="example@email.com">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">รหัสผ่าน (Password)</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-neutral-400 text-sm"><i class="fa-solid fa-lock"></i></span>
+                    <input type="password" id="password" required class="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-neutral-900 text-neutral-900 transition-all placeholder:text-neutral-400" placeholder="รหัสผ่านอย่างน้อย 6 ตัวอักษร">
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg active:scale-[0.98] mt-2 cursor-pointer">
+                เข้าสู่ระบบ
+            </button>
+        </form>
+
+        <p class="text-center text-[11px] text-neutral-400 mt-6 relative z-10">POCKET DIARY © 2026</p>
+    </div>
+
+    <!-- Custom Alert Modal (ป๊อปอัพแจ้งเตือน) -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-neutral-200 w-full max-w-xs rounded-3xl p-6 shadow-2xl text-center space-y-4 relative text-neutral-900">
+            <div id="alertIcon" class="w-12 h-12 bg-neutral-100 text-neutral-900 border border-neutral-200 rounded-full flex items-center justify-center mx-auto text-xl font-bold shadow-sm">⚠️</div>
+            <div class="space-y-1">
+                <h3 id="alertTitle" class="text-sm font-bold text-neutral-900">แจ้งเตือน</h3>
+                <p id="alertMessage" class="text-xs text-neutral-600 leading-relaxed"></p>
+            </div>
+            <button type="button" onclick="closeCustomAlert()" class="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-semibold py-2.5 rounded-xl transition-all cursor-pointer text-xs shadow-md">
+                เข้าใจแล้ว
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Supabase + Logic -->
+    <script>
+        const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+        // ใช้ Anon Key ที่ถูกต้องของโปรเจคคุณ
+        const SUPABASE_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentMode = 'login'; // 'login' หรือ 'register'
+
+        window.showCustomAlert = function(message, title = "แจ้งเตือน", icon = "⚠️") {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('alertIcon').innerText = icon;
+            
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        window.closeCustomAlert = function() {
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        window.switchTab = function(mode) {
+            currentMode = mode;
+            const loginBtn = document.getElementById('tab-login');
+            const regBtn = document.getElementById('tab-register');
+            const subtitle = document.getElementById('form-subtitle');
+            const nameField = document.getElementById('name-field-container');
+            const submitBtn = document.getElementById('submit-btn');
+
+            const usernameInput = document.getElementById('username');
+            const displayInput = document.getElementById('display_name');
+
+            if (mode === 'login') {
+                loginBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-lg bg-neutral-900 text-white transition-all shadow-md cursor-pointer";
+                regBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-lg text-neutral-500 hover:text-neutral-900 transition-all cursor-pointer";
+                subtitle.innerText = "ยินดีต้อนรับสู่โลกแห่งความทรงจำของคุณ";
+                nameField.classList.add('hidden');
+                usernameInput.required = false;
+                displayInput.required = false;
+                submitBtn.innerText = "เข้าสู่ระบบ";
+            } else {
+                regBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-lg bg-neutral-900 text-white transition-all shadow-md cursor-pointer";
+                loginBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-lg text-neutral-500 hover:text-neutral-900 transition-all cursor-pointer";
+                subtitle.innerText = "สร้างบัญชีผู้ใช้ใหม่ในระบบ POCKET DIARY";
+                nameField.classList.remove('hidden');
+                usernameInput.required = true;
+                displayInput.required = true;
+                submitBtn.innerText = "สมัครสมาชิก";
+            }
+        }
+
+        window.handleAuth = async function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            try {
+                if (currentMode === 'login') {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+                    if (error) {
+                        showCustomAlert('อีเมลหรือรหัสผ่านไม่ถูกต้อง', 'เข้าสู่ระบบไม่สำเร็จ', '🔒');
+                        return;
+                    }
+
+                    if (data.session) {
+                        showCustomAlert('เข้าสู่ระบบสำเร็จ กำลังเข้าสู่หน้าหลัก...', 'ยินดีต้อนรับ', '✨');
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 1000);
+                    }
+                } else {
+                    const username = document.getElementById('username').value.trim();
+                    const display_name = document.getElementById('display_name').value.trim();
+
+                    // 1. สมัครสมาชิกผ่าน Supabase Auth
+                    const { data, error } = await supabase.auth.signUp({
+                        email,
+                        password
+                    });
+
+                    if (error) {
+                        showCustomAlert(error.message, 'สมัครไม่สำเร็จ', '❌');
+                        return;
+                    }
+
+                    if (data.user) {
+                        const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+                        const isAdmin = (email === 'ciiderydem@gmail.com');
+
+                        // 2. บันทึกข้อมูลลงตาราง users ตามปกติ
+                        const { error: dbError } = await supabase.from('users').insert({
+                            id: data.user.id,
+                            email: email,
+                            username: username,
+                            display_name: display_name,
+                            account_number: accountNumber,
+                            account_name: display_name,
+                            coins: 1000,
+                            cookies: 10,
+                            is_admin: isAdmin
+                        });
+
+                        if (dbError) {
+                            showCustomAlert(dbError.message, 'บันทึกโปรไฟล์ไม่สำเร็จ', '⚠️');
+                            return;
+                        }
+
+                        showCustomAlert('สมัครสมาชิกเรียบร้อย กำลังเข้าสู่ระบบ...', 'สำเร็จ', '🎉');
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 1000);
+                    }
+                }
+            } catch (err) {
+                showCustomAlert(err.message, 'เกิดข้อผิดพลาด', '⚠️');
+            }
+        }
+    </script>
+</body>
+</html>
