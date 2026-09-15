@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>POCKET DIARY - กาชา</title>
+  
+  <!-- Google Font: Prompt -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-pearl: #FDFBFB;
+      --bg-pearl-gradient: linear-gradient(135deg, #FFFFFF 0%, #EFECE6 100%);
+      --royal-black: #111111;
+      --royal-gold: #D4AF37;
+      --accent-gray: #555555;
+      --border-color: rgba(17, 17, 17, 0.15);
+      --shadow-luxury: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden; /* ล็อคหน้าจอไม่ให้ขยับซ้ายขวา บนล่าง */
+      background: var(--bg-pearl-gradient);
+      color: var(--royal-black);
+    }
+
+    /* Top HUD (แสดงเงินเหรียญ และ คุกกี้) */
+    .top-hud {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      right: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .back-btn, .currency-box {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      text-decoration: none;
+      color: var(--royal-black);
+    }
+
+    .currency-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .currency-box img {
+      width: 20px; height: 20px; object-fit: contain;
+    }
+
+    /* Main Gacha Container */
+    .gacha-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 80px 20px 30px 20px;
+    }
+
+    /* Tab เลือกตู้กาชา (5 ตู้) */
+    .gacha-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      max-width: 100%;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .gacha-tab {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .gacha-tab.active {
+      background: var(--royal-black);
+      color: #FFF;
+      border-color: var(--royal-black);
+    }
+
+    /* ตู้กาชาแสดงผลหลัก */
+    .gacha-banner-card {
+      width: 100%;
+      max-width: 450px;
+      height: 380px;
+      background: #FFFFFF;
+      border: 2px solid var(--royal-black);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--shadow-luxury);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .banner-img-area {
+      width: 100%;
+      height: 270px;
+      background: #F4F3F0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .banner-img-area img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+
+    .banner-info {
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex: 1;
+    }
+
+    .banner-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .banner-desc {
+      font-size: 0.8rem;
+      color: var(--accent-gray);
+    }
+
+    /* ปุ่มกดสุ่ม */
+    .gacha-actions {
+      display: flex;
+      gap: 15px;
+      width: 100%;
+      max-width: 450px;
+    }
+
+    .gacha-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 16px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      transition: transform 0.1s;
+    }
+
+    .gacha-btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-single {
+      background: #FFFFFF;
+      color: var(--royal-black);
+      border: 1.5px solid var(--royal-black);
+    }
+
+    .btn-multi {
+      background: var(--royal-black);
+      color: #FFFFFF;
+    }
+
+    .gacha-btn img {
+      width: 18px; height: 18px; object-fit: contain;
+    }
+
+    /* Popup แสดงผลการสุ่ม (Result Modal) */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+
+    .popup-overlay.show { opacity: 1; pointer-events: auto; }
+
+    .result-card {
+      background: #FFFFFF;
+      width: 90%; max-width: 400px;
+      border-radius: 24px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .popup-overlay.show .result-card { transform: scale(1); }
+
+    .result-items-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 15px 0;
+      padding: 5px;
+    }
+
+    .result-item-box {
+      background: #F8F7F4;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .result-item-box img {
+      width: 80px; height: 80px; object-fit: cover; border-radius: 10px; margin-bottom: 8px;
+    }
+
+    .result-item-name {
+      font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .result-item-rank {
+      font-size: 0.75rem; color: var(--royal-gold); font-weight: 700;
+    }
+
+    .popup-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--royal-black);
+      color: #FFF;
+      border: none;
+      border-radius: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    /* Alert Popup สไตล์น่ารัก */
+    .alert-card {
+      background: #FFF; width: 85%; max-width: 320px;
+      border-radius: 20px; padding: 25px; text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top HUD -->
+  <header class="top-hud">
+    <a href="home.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> หน้าหลัก
+    </a>
+    <div class="currency-container">
+      <div class="currency-box">
+        <i class="fa-solid fa-coins" style="color: var(--royal-gold);"></i>
+        <span id="userCoins">0</span>
+      </div>
+      <div class="currency-box">
+        <i class="fa-solid fa-cookie-bite" style="color: #c68b59;"></i>
+        <span id="userCookies">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Gacha UI -->
+  <main class="gacha-container">
+    <!-- ตู้เลือกกาชา 5 ตู้ -->
+    <div class="gacha-tabs">
+      <div class="gacha-tab active" onclick="switchGacha('permanent')">ตู้ถาวร</div>
+      <div class="gacha-tab" onclick="switchGacha('old_season')">ตู้ซีซั่นเก่า</div>
+      <div class="gacha-tab" onclick="switchGacha('season')">ตู้ประจำฤดูกาล</div>
+      <div class="gacha-tab" onclick="switchGacha('monthly')">ตู้รายเดือน</div>
+      <div class="gacha-tab" onclick="switchGacha('character')">ตู้ตัวละครใหม่</div>
+    </div>
+
+    <!-- แบนเนอร์แสดงตู้กาชา -->
+    <div class="gacha-banner-card">
+      <div class="banner-img-area">
+        <img id="bannerImage" src="https://via.placeholder.com/450x270" alt="Gacha Banner">
+      </div>
+      <div class="banner-info">
+        <div>
+          <div class="banner-title" id="bannerTitle">ตู้ถาวร (Permanent)</div>
+          <div class="banner-desc" id="bannerDesc">สุ่มหาตัวละครและไอเท็มได้ตลอดกาล</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ปุ่มสุ่ม -->
+    <div class="gacha-actions">
+      <button class="gacha-btn btn-single" onclick="pullGacha(1)">
+        <i class="fa-solid fa-star" style="color: var(--royal-gold);"></i> สุ่ม 1 ครั้ง (100 เหรียญ)
+      </button>
+      <button class="gacha-btn btn-multi" onclick="pullGacha(10)">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> สุ่ม 10 ครั้ง (1,000 เหรียญ)
+      </button>
+    </div>
+  </main>
+
+  <!-- Popup แสดงผลลัพธ์การสุ่ม -->
+  <div class="popup-overlay" id="resultModal">
+    <div class="result-card">
+      <h3 id="resultModalTitle" style="font-size: 1.2rem; margin-bottom: 5px;">ผลการสุ่มกาชา</h3>
+      <p style="font-size: 0.85rem; color: var(--accent-gray);">ยินดีด้วย คุณได้รับไอเท็มดังนี้!</p>
+      <div class="result-items-grid" id="resultItemsGrid">
+        <!-- รายการไอเท็มที่สุ่มได้ -->
+      </div>
+      <button class="popup-btn" onclick="closeResultModal()">ยอดเยี่ยม</button>
+    </div>
+  </div>
+
+  <!-- Alert Popup -->
+  <div class="popup-overlay" id="alertOverlay">
+    <div class="alert-card">
+      <h3 id="alertTitle" style="margin-bottom: 8px;">แจ้งเตือน</h3>
+      <p id="alertDesc" style="color: var(--accent-gray); margin-bottom: 20px; font-size: 0.9rem;"></p>
+      <button onclick="closeAlert()" class="popup-btn">ตกลง</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let currentPoolType = 'permanent';
+    let poolItems = []; // รายการไอเท็มในตู้ปัจจุบัน
+
+    const bannerData = {
+      permanent: { title: 'ตู้ถาวร (Permanent)', desc: 'ตู้มาตรฐานที่ไม่เคยเปลี่ยนของในตู้', img: 'https://via.placeholder.com/450x270?text=Permanent+Gacha' },
+      old_season: { title: 'ตู้ซีซั่นเก่า (Old Season)', desc: 'รวมสกิน B, A, S และไอเท็มตู้รายเดือนเก่า', img: 'https://via.placeholder.com/450x270?text=Old+Season+Gacha' },
+      season: { title: 'ตู้ประจำฤดูกาล (Season)', desc: 'ตู้พิเศษประจำฤดูกาลปัจจุบัน', img: 'https://via.placeholder.com/450x270?text=Season+Gacha' },
+      monthly: { title: 'ตู้รายเดือน (Monthly)', desc: 'อัปเดตสกินและไอเท็มใหม่ทุกๆ 1 เดือน', img: 'https://via.placeholder.com/450x270?text=Monthly+Gacha' },
+      character: { title: 'ตู้ตัวละครใหม่ (Character)', desc: 'ตู้จำกัดเวลา สำหรับสะสมตัวละครใหม่', img: 'https://via.placeholder.com/450x270?text=Character+Gacha' }
+    };
+
+    window.showAlert = function(title, desc) {
+      document.getElementById('alertTitle').textContent = title;
+      document.getElementById('alertDesc').textContent = desc;
+      document.getElementById('alertOverlay').classList.add('show');
+    }
+
+    window.closeAlert = function() {
+      document.getElementById('alertOverlay').classList.remove('show');
+    }
+
+    async function initGacha() {
+      const savedUser = sessionStorage.getItem('pocket_diary_user');
+      if (!savedUser) {
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = JSON.parse(savedUser);
+      updateCurrencyDisplay();
+      await fetchPoolItems(currentPoolType);
+    }
+
+    function updateCurrencyDisplay() {
+      document.getElementById('userCoins').textContent = currentUser.coins || 0;
+      document.getElementById('userCookies').textContent = currentUser.cookies || 0;
+    }
+
+    window.switchGacha = async function(type) {
+      currentPoolType = type;
+      document.querySelectorAll('.gacha-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+
+      document.getElementById('bannerTitle').textContent = bannerData[type].title;
+      document.getElementById('bannerDesc').textContent = bannerData[type].desc;
+      document.getElementById('bannerImage').src = bannerData[type].img;
+
+      await fetchPoolItems(type);
+    }
+
+    async function fetchPoolItems(type) {
+      try {
+        const { data, error } = await supabase
+          .from('gacha_pools')
+          .select('*')
+          .eq('pool_type', type);
+
+        if (error) throw error;
+        poolItems = data || [];
+      } catch (err) {
+        console.warn('โหลดข้อมูลตู้กาชาจำลอง:', err);
+        // Fallback ไอเท็มจำลองหากยังไม่มีตารางใน Supabase
+        poolItems = [
+          { id: 'item_1', name: 'กุหลาบแดง', type: 'item', rank: 'A', image: 'https://via.placeholder.com/100' },
+          { id: 'skin_1', name: 'ตัวละครตัวอย่าง A', type: 'skin', rank: 'S', image: 'https://via.placeholder.com/100' }
+        ];
+      }
+    }
+
+    window.pullGacha = async function(count) {
+      const cost = count * 100; // สมมติ 1 ครั้ง 100 เหรียญ
+      if ((currentUser.coins || 0) < cost) {
+        showAlert('เงินไม่พอ', 'เหรียญในธนาคารของคุณไม่เพียงพอสำหรับการสุ่ม กรุณาไปเล่นมินิเกมหรือเติมเงิน');
+        return;
+      }
+
+      if (poolItems.length === 0) {
+        showAlert('ตู้ว่างเปล่า', 'ยังไม่มีไอเท็มในตู้กาชานี้ (แอดมินสามารถเพิ่มได้ผ่านแอป Admin)');
+        return;
+      }
+
+      // หักเงิน
+      currentUser.coins -= cost;
+
+      let wonItems = [];
+      for (let i = 0; i < count; i++) {
+        // สุ่มไอเท็มจาก poolItems
+        const randomIndex = Math.floor(Math.random() * poolItems.length);
+        const prize = poolItems[randomIndex];
+        wonItems.push(prize);
+
+        // ตรวจสอบประเภทรางวัล (ถ้าเป็นสกินตัวละคร เช็คว่ามีซ้ำไหม ถ้าซ้ำได้คุกกี้)
+        if (prize.type === 'skin') {
+          await handleSkinReward(prize);
+        } else {
+          await handleItemReward(prize);
+        }
+      }
+
+      // บันทึกเงินใหม่ลง Supabase
+      try {
+        await supabase.from('users').update({ 
+          coins: currentUser.coins, 
+          cookies: currentUser.cookies 
+        }).eq('id', currentUser.id);
+
+        sessionStorage.setItem('pocket_diary_user', JSON.stringify(currentUser));
+        updateCurrencyDisplay();
+      } catch (err) {
+        console.error('อัปเดตข้อมูลผู้ใช้ไม่สำเร็จ:', err);
+      }
+
+      showResultModal(wonItems);
+    }
+
+    async function handleSkinReward(prize) {
+      try {
+        // เช็คว่ามีสกินนี้ใน user_skins หรือยัง
+        const { data: existing } = await supabase
+          .from('user_skins')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .eq('skin_id', prize.id)
+          .single();
+
+        if (existing) {
+          // ถ้ามีตัวละคร/สกินนี้แล้ว ได้รับ "คุกกี้" แทน
+          currentUser.cookies = (currentUser.cookies || 0) + 1;
+        } else {
+          // ถ้ายังไม่มี เพิ่มลง user_skins (แสดงผลใน Diary ทันที)
+          await supabase.from('user_skins').insert([
+            { user_id: currentUser.id, skin_id: prize.id }
+          ]);
+        }
+      } catch (err) {
+        // กรณีดึงข้อมูลผิดพลาด ให้บวกคุกกี้สำรอง
+        currentUser.cookies = (currentUser.cookies || 0) + 1;
+      }
+    }
+
+    async function handleItemReward(prize) {
+      try {
+        // ส่งเข้า Inventory ทันที
+        await supabase.from('user_inventory').insert([
+          { user_id: currentUser.id, item_id: prize.id, item_type: prize.type }
+        ]);
+      } catch (err) {
+        console.warn('บันทึกไอเท็มเข้าคลังไม่สำเร็จ:', err);
+      }
+    }
+
+    function showResultModal(items) {
+      const grid = document.getElementById('resultItemsGrid');
+      grid.innerHTML = '';
+
+      items.forEach(item => {
+        const box = document.createElement('div');
+        box.className = 'result-item-box';
+        box.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div class="result-item-name">${item.name}</div>
+          <div class="result-item-rank">[ ${item.rank || 'Item'} ]</div>
+        `;
+        grid.appendChild(box);
+      });
+
+      document.getElementById('resultModal').classList.add('show');
+    }
+
+    window.closeResultModal = function() {
+      document.getElementById('resultModal').classList.remove('show');
+    }
+
+    window.addEventListener('DOMContentLoaded', initGacha);
+  </script>
+</body>
+</html>
