@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>POCKET DIARY - คลังเก็บของ</title>
+  
+  <!-- Google Font: Prompt -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-pearl: #FDFBFB;
+      --bg-pearl-gradient: linear-gradient(135deg, #FFFFFF 0%, #EFECE6 100%);
+      --royal-black: #111111;
+      --royal-gold: #D4AF37;
+      --accent-gray: #555555;
+      --border-color: rgba(17, 17, 17, 0.15);
+      --shadow-luxury: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      overflow-y: auto; /* อนุญาตให้เลื่อนหน้าจอขึ้นลงได้ตามธรรมชาติ */
+      background: var(--bg-pearl-gradient);
+      color: var(--royal-black);
+    }
+
+    /* Top HUD */
+    .top-hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(253, 251, 251, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .back-btn, .currency-box {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      text-decoration: none;
+      color: var(--royal-black);
+    }
+
+    .currency-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .currency-box img {
+      width: 20px; height: 20px; object-fit: contain;
+    }
+
+    /* Main Inventory Container */
+    .inventory-container {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 90px 20px 40px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tab เลือกหมวดหมู่ (Background / Item) */
+    .inv-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .inv-tab {
+      flex: 1;
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+
+    .inv-tab.active {
+      background: var(--royal-black);
+      color: #FFF;
+      border-color: var(--royal-black);
+    }
+
+    /* พื้นที่แสดงรายการสินค้าในคลัง (รองรับการเลื่อนแนวตั้ง) */
+    .inv-grid-area {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 15px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      align-content: start;
+      min-height: 400px;
+    }
+
+    .inv-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .inv-card:active {
+      transform: scale(0.97);
+    }
+
+    .inv-card-img-wrapper {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin-bottom: 10px;
+    }
+
+    .inv-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 14px;
+      background: #F4F3F0;
+    }
+
+    /* ป้ายแสดงจำนวนชิ้น (Badge) สำหรับ Item ซ้ำ */
+    .item-count-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--royal-black);
+      color: #FFF;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 2px solid #FFF;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .inv-card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    .inv-card-desc {
+      font-size: 0.75rem;
+      color: var(--accent-gray);
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .inv-action-btn {
+      width: 100%;
+      padding: 8px;
+      background: var(--royal-black);
+      color: #FFF;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: auto;
+    }
+
+    .inv-action-btn.active-bg {
+      background: var(--royal-gold);
+    }
+
+    /* Popup Modal สไตล์น่ารัก */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+
+    .popup-overlay.show { opacity: 1; pointer-events: auto; }
+
+    .popup-card {
+      background: #FFFFFF;
+      width: 85%; max-width: 340px;
+      border-radius: 24px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .popup-overlay.show .popup-card { transform: scale(1); }
+
+    .popup-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--royal-black);
+      color: #FFF;
+      border: none;
+      border-radius: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top HUD -->
+  <header class="top-hud">
+    <a href="home.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> หน้าหลัก
+    </a>
+    <div class="currency-container">
+      <div class="currency-box">
+        <i class="fa-solid fa-coins" style="color: var(--royal-gold);"></i>
+        <span id="userCoins">0</span>
+      </div>
+      <div class="currency-box">
+        <i class="fa-solid fa-cookie-bite" style="color: #c68b59;"></i>
+        <span id="userCookies">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="inventory-container">
+    <!-- Tabs หมวดหมู่ -->
+    <div class="inv-tabs">
+      <div class="inv-tab active" onclick="switchTab('background', event)">BACKGROUND</div>
+      <div class="inv-tab" onclick="switchTab('item', event)">ITEM</div>
+    </div>
+
+    <!-- Grid แสดงไอเท็ม (เลื่อนขึ้นลงได้) -->
+    <div class="inv-grid-area" id="inventoryGrid">
+      <!-- ข้อมูลจะถูกโหลดแบบ Realtime ผ่าน JS -->
+    </div>
+  </main>
+
+  <!-- Popup Alert / Action Modal -->
+  <div class="popup-overlay" id="popupOverlay">
+    <div class="popup-card">
+      <h3 id="popupTitle" style="margin-bottom: 8px;">จัดการไอเท็ม</h3>
+      <p id="popupDesc" style="color: var(--accent-gray); margin-bottom: 15px; font-size: 0.85rem;"></p>
+      <div id="popupContentArea"></div>
+      <button onclick="closePopup()" class="popup-btn" style="background: #EFECE6; color: var(--royal-black);">ปิด</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let currentTab = 'background'; 
+    let inventoryItems = [];
+    let userProfile = null;
+
+    window.showAlert = function(title, desc) {
+      document.getElementById('popupTitle').textContent = title;
+      document.getElementById('popupDesc').textContent = desc;
+      document.getElementById('popupContentArea').innerHTML = '';
+      document.getElementById('popupOverlay').classList.add('show');
+    }
+
+    window.closePopup = function() {
+      document.getElementById('popupOverlay').classList.remove('show');
+    }
+
+    async function initInventory() {
+      const savedUser = sessionStorage.getItem('pocket_diary_user');
+      if (!savedUser) {
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = JSON.parse(savedUser);
+      await fetchUserData();
+      await fetchInventory();
+    }
+
+    async function fetchUserData() {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (data) {
+          userProfile = data;
+          document.getElementById('userCoins').textContent = data.coins || 0;
+          document.getElementById('userCookies').textContent = data.cookies || 0;
+        }
+      } catch (err) {
+        console.warn('โหลดข้อมูลผู้ใช้:', err);
+      }
+    }
+
+    window.switchTab = async function(tab, event) {
+      currentTab = tab;
+      document.querySelectorAll('.inv-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      await fetchInventory();
+    }
+
+    async function fetchInventory() {
+      const grid = document.getElementById('inventoryGrid');
+      grid.innerHTML = '<p style="grid-column: span 2; text-align:center; color:var(--accent-gray); padding: 20px;">กำลังโหลด...</p>';
+
+      try {
+        const { data, error } = await supabase
+          .from('user_inventory')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .eq('item_type', currentTab);
+
+        if (error) throw error;
+        inventoryItems = data || [];
+        renderInventory();
+      } catch (err) {
+        console.warn('โหลดคลังเก็บของไม่สำเร็จ:', err);
+        inventoryItems = [];
+        renderInventory();
+      }
+    }
+
+    function renderInventory() {
+      const grid = document.getElementById('inventoryGrid');
+      grid.innerHTML = '';
+
+      if (inventoryItems.length === 0) {
+        grid.innerHTML = `<p style="grid-column: span 2; text-align:center; color:var(--accent-gray); padding: 30px;">ไม่มีไอเท็มในหมวดหมู่นี้</p>`;
+        return;
+      }
+
+      if (currentTab === 'item') {
+        // ระบบกรุ๊ปไอเท็มชิ้นที่ซ้ำกันให้แสดงเป็นชิ้นเดียวพร้อมนับจำนวน (xN)
+        const groupedMap = {};
+        inventoryItems.forEach(item => {
+          const key = item.item_id;
+          if (!groupedMap[key]) {
+            groupedMap[key] = { ...item, count: 1, dbIds: [item.id] };
+          } else {
+            groupedMap[key].count += 1;
+            groupedMap[key].dbIds.push(item.id);
+          }
+        });
+
+        Object.values(groupedMap).forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'inv-card';
+          card.onclick = () => openItemActionModal(item);
+
+          card.innerHTML = `
+            <div class="inv-card-img-wrapper">
+              <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}">
+              ${item.count > 1 ? `<div class="item-count-badge">x${item.count}</div>` : ''}
+            </div>
+            <div class="inv-card-title">${item.name}</div>
+            <div class="inv-card-desc">${item.description || 'ไอเท็มพิเศษ'}</div>
+            <button class="inv-action-btn">กดใช้ / จัดการ</button>
+          `;
+          grid.appendChild(card);
+        });
+
+      } else {
+        // สำหรับ Background แสดงปกติทีละชิ้น
+        inventoryItems.forEach(item => {
+          const isCurrentBg = (userProfile?.equipped_background === item.item_id);
+          const card = document.createElement('div');
+          card.className = 'inv-card';
+          card.onclick = () => equipBackground(item.item_id);
+
+          card.innerHTML = `
+            <div class="inv-card-img-wrapper">
+              <img src="${item.image || 'https://via.placeholder.com/150'}" alt="${item.name}">
+            </div>
+            <div class="inv-card-title">${item.name}</div>
+            <div class="inv-card-desc">พื้นหลังล็อบบี้</div>
+            <button class="inv-action-btn ${isCurrentBg ? 'active-bg' : ''}">
+              ${isCurrentBg ? 'กำลังใช้งาน' : 'สวมใส่'}
+            </button>
+          `;
+          grid.appendChild(card);
+        });
+      }
+    }
+
+    async function equipBackground(itemId) {
+      try {
+        await supabase.from('users').update({ equipped_background: itemId }).eq('id', currentUser.id);
+        userProfile.equipped_background = itemId;
+        showAlert('สำเร็จ', 'เปลี่ยนพื้นหลังหน้าล็อบบี้เรียบร้อยแล้ว!');
+        renderInventory();
+      } catch (err) {
+        showAlert('แจ้งเตือน', 'ไม่สามารถเปลี่ยนพื้นหลังได้ในขณะนี้');
+      }
+    }
+
+    window.openItemActionModal = function(item) {
+      document.getElementById('popupTitle').textContent = item.name;
+      document.getElementById('popupDesc').textContent = `คุณมีไอเท็มนี้อยู่ทั้งหมด ${item.count} ชิ้นในคลัง`;
+      
+      let contentHtml = '';
+      const subType = item.sub_type || 'general';
+      const sellVal = item.value || 50;
+
+      if (subType === 'general' || subType === 'sellable') {
+        contentHtml = `
+          <button class="popup-btn" onclick="useItemOneByOne('${item.dbIds[0]}', '${item.sub_type}')">ใช้ 1 ชิ้น</button>
+          <button class="popup-btn" style="background: var(--royal-gold); color: #FFF;" onclick="sellSingleItem('${item.dbIds[0]}', ${sellVal})">ขาย 1 ชิ้น รับ ${sellVal} เหรียญ</button>
+        `;
+      } else {
+        contentHtml = `
+          <button class="popup-btn" onclick="useItemOneByOne('${item.dbIds[0]}', '${item.sub_type}')">ใช้ 1 ชิ้น</button>
+          <p style="font-size:0.75rem; color:var(--accent-gray); margin-top:10px;">ไอเท็มเพิ่มความสัมพันธ์ (สามารถใช้ผ่านหน้าเพื่อนหรือไดอารี่)</p>
+        `;
+      }
+
+      document.getElementById('popupContentArea').innerHTML = contentHtml;
+      document.getElementById('popupOverlay').classList.add('show');
+    }
+
+    window.useItemOneByOne = async function(dbId, subType) {
+      try {
+        // ลบไอเท็มออก 1 ชิ้นจากฐานข้อมูลตาม ID แถวนั้นๆ
+        await supabase.from('user_inventory').delete().eq('id', dbId);
+        closePopup();
+        showAlert('ใช้งานสำเร็จ', 'คุณได้ทำการใช้ไอเท็มเรียบร้อยแล้ว');
+        await fetchInventory();
+      } catch (err) {
+        showAlert('แจ้งเตือน', 'ไม่สามารถใช้ไอเท็มได้ในขณะนี้');
+      }
+    }
+
+    window.sellSingleItem = async function(dbId, sellPrice) {
+      try {
+        await supabase.from('user_inventory').delete().eq('id', dbId);
+        
+        const newCoins = (userProfile.coins || 0) + sellPrice;
+        await supabase.from('users').update({ coins: newCoins }).eq('id', currentUser.id);
+        
+        userProfile.coins = newCoins;
+        document.getElementById('userCoins').textContent = newCoins;
+        
+        closePopup();
+        showAlert('ขายสำเร็จ', `คุณได้รับเหรียญ ${sellPrice} เหรียญเข้าบัญชีธนาคารเรียบร้อยแล้ว!`);
+        await fetchInventory();
+      } catch (err) {
+        showAlert('แจ้งเตือน', 'เกิดข้อผิดพลาดในการขายไอเท็ม');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initInventory);
+  </script>
+</body>
+</html>
