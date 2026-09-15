@@ -1,0 +1,13 @@
+// supabase-config.js
+
+// 1. นำเข้า Supabase Client จาก CDN (สำหรับใช้ใน HTML ปกติ)
+// แนะนำให้ใส่ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> ไว้ในไฟล์ HTML ก่อนเรียกใช้ไฟล์นี้
+
+const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85'; // หมายเหตุ: อันนี้คือ Publishable/Anon Key ของคุณ
+
+// สร้าง instance ของ Supabase client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ส่งออก (Export) ไปใช้ในไฟล์อื่น (ถ้าใช้ ES Module)
+export { supabase };
