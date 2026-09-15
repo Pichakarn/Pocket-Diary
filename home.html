@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>POCKET DIARY - หน้าหลัก</title>
+  
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Google Font: Prompt -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-pearl: #FDFBFB;
+      --bg-pearl-gradient: linear-gradient(135deg, #FFFFFF 0%, #EFECE6 100%);
+      --royal-black: #111111;
+      --royal-gold: #D4AF37;
+      --accent-gray: #555555;
+      --border-color: rgba(17, 17, 17, 0.15);
+      --shadow-luxury: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: var(--bg-pearl-gradient);
+      color: var(--royal-black);
+      position: relative;
+    }
+
+    /* พื้นที่ล็อบบี้ (แสดงพื้นหลังเริ่มต้นตามที่กำหนด) */
+    .lobby-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #EFECE6;
+      /* รูปพื้นหลังเริ่มต้นแจกฟรี */
+      background-image: url('https://res.cloudinary.com/ncpkgyfz/image/upload/v1789129860/xwcdfvquvalzrhnwjzxo.png'); 
+    }
+
+    /* ตัวละครหน้าล็อบบี้ (จะซ่อนอัตโนมัติหากยังไม่มีรูปตัวละคร) */
+    .lobby-character {
+      height: 65vh;
+      max-width: 95%;
+      object-fit: contain;
+      filter: drop-shadow(0 15px 25px rgba(0,0,0,0.18));
+      transition: all 0.3s ease;
+      z-index: 2;
+      margin-bottom: 90px;
+      display: none; /* ซ่อนไว้ก่อนจนกว่าจะมีข้อมูล */
+    }
+
+    /* แถบข้อมูลด้านบน */
+    .top-hud {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      right: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      gap: 10px;
+    }
+
+    .user-pill {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      max-width: 65%;
+      overflow: hidden;
+    }
+
+    .user-info-text h3 {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--royal-black);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ปุ่มออกจากระบบ (ลดขนาดให้เล็กและกะทัดรัดขึ้น) */
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      color: #d9534f;
+      padding: 6px 10px;
+      border-radius: 50px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .logout-btn:hover {
+      background: #fff5f5;
+    }
+
+    /* แถบเมนูด้านล่าง */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 85px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 10px;
+      z-index: 200;
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--accent-gray);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      gap: 4px;
+      padding: 8px 0;
+      border-radius: 16px;
+      text-decoration: none;
+    }
+
+    .nav-btn i {
+      font-size: 1.35rem;
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-btn span {
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      color: var(--royal-black);
+    }
+
+    .nav-btn:active i {
+      transform: scale(0.9);
+    }
+
+    .nav-btn.phone-special {
+      background: var(--royal-black);
+      color: #FFFFFF;
+      max-width: 65px;
+      height: 62px;
+      border-radius: 20px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+
+    .nav-btn.phone-special i {
+      color: var(--royal-gold);
+      font-size: 1.4rem;
+    }
+
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .popup-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .popup-card {
+      width: 85%;
+      max-width: 320px;
+      background: #FFFFFF;
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- แถบด้านบน: แสดงอีเมล และปุ่มออกจากระบบ -->
+  <header class="top-hud">
+    <div class="user-pill">
+      <i class="fa-solid fa-envelope" style="color: var(--royal-gold);"></i>
+      <div class="user-info-text">
+        <h3 id="userEmailText">กำลังโหลด...</h3>
+      </div>
+    </div>
+
+    <button class="logout-btn" onclick="handleLogout()">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>ออกจากระบบ</span>
+    </button>
+  </header>
+
+  <!-- พื้นที่ล็อบบี้หลัก -->
+  <main class="lobby-container" id="lobbyBg">
+    <!-- ตัวละครหน้าล็อบบี้ (แสดงเมื่อผู้ใช้เลือกตัวละครแล้วเท่านั้น) -->
+    <img src="" alt="Character" class="lobby-character" id="lobbyCharacter">
+  </main>
+
+  <!-- แถบเมนูด้านล่าง (5 ฟังก์ชัน) -->
+  <nav class="bottom-nav">
+    <a href="diary.html" class="nav-btn">
+      <i class="fa-solid fa-book-open"></i>
+      <span>Diary</span>
+    </a>
+    <a href="gacha.html" class="nav-btn">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <span>Gacha</span>
+    </a>
+    <a href="inventory.html" class="nav-btn">
+      <i class="fa-solid fa-box-archive"></i>
+      <span>Inventory</span>
+    </a>
+    <a href="minigame.html" class="nav-btn">
+      <i class="fa-solid fa-gamepad"></i>
+      <span>Minigame</span>
+    </a>
+    <a href="phone.html" class="nav-btn phone-special">
+      <i class="fa-solid fa-mobile-screen-button"></i>
+      <span>Phone</span>
+    </a>
+  </nav>
+
+  <!-- Popup แจ้งเตือน -->
+  <div class="popup-overlay" id="popupOverlay">
+    <div class="popup-card">
+      <h3 id="popupTitle" style="margin-bottom: 10px;">แจ้งเตือน</h3>
+      <p id="popupMessage" style="color: var(--accent-gray); margin-bottom: 20px; font-size: 0.9rem;"></p>
+      <button onclick="closePopup()" style="background: var(--royal-black); color: #fff; border: none; padding: 8px 24px; border-radius: 10px; cursor: pointer;">ตกลง</button>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadUserData() {
+      const savedUserStr = sessionStorage.getItem('pocket_diary_user');
+      if (!savedUserStr) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      let user = JSON.parse(savedUserStr);
+      document.getElementById('userEmailText').textContent = user.email || 'user@pocketdiary.com';
+
+      // ดึงข้อมูลล่าสุดจาก Supabase
+      try {
+        const { data: latestUser, error } = await supabaseClient
+          .from('users')
+          .select('*')
+          .eq('email', user.email)
+          .single();
+
+        if (latestUser && !error) {
+          user = latestUser;
+          sessionStorage.setItem('pocket_diary_user', JSON.stringify(user));
+        }
+      } catch (err) {
+        console.warn('ใช้ข้อมูลจาก Session:', err);
+      }
+
+      // ตั้งค่ารูปพื้นหลัง (ถ้ามีในฐานข้อมูลจะใช้ของแอดมิน/ที่เลือกไว้ ถ้าไม่มีใช้รูปแรกสุดเริ่มแรก)
+      const lobbyBg = document.getElementById('lobbyBg');
+      const defaultBg = 'https://res.cloudinary.com/ncpkgyfz/image/upload/v1789129860/xwcdfvquvalzrhnwjzxo.png';
+      lobbyBg.style.backgroundImage = `url('${user.active_background_image || defaultBg}')`;
+
+      // จัดการแสดงผลตัวละครหน้าล็อบบี้
+      const lobbyCharacter = document.getElementById('lobbyCharacter');
+      if (user.active_skin_full_image) {
+        lobbyCharacter.src = user.active_skin_full_image;
+        lobbyCharacter.style.display = 'block'; // แสดงตัวละครเมื่อมีค่า
+      } else {
+        lobbyCharacter.style.display = 'none'; // ซ่อนถ้ายังไม่มี
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('pocket_diary_user');
+      window.location.href = 'index.html';
+    }
+
+    function showPopup(title, msg) {
+      document.getElementById('popupTitle').textContent = title;
+      document.getElementById('popupMessage').textContent = msg;
+      document.getElementById('popupOverlay').classList.add('show');
+    }
+
+    function closePopup() {
+      document.getElementById('popupOverlay').classList.remove('show');
+    }
+
+    window.addEventListener('DOMContentLoaded', loadUserData);
+  </script>
+</body>
+</html>
