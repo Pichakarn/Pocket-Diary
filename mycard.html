@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>POCKET DIARY - นามบัตร</title>
+  
+  <!-- Google Font: Prompt -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-pearl: #FDFBFB;
+      --bg-pearl-gradient: linear-gradient(135deg, #FFFFFF 0%, #EFECE6 100%);
+      --royal-black: #111111;
+      --royal-gold: #D4AF37;
+      --accent-gray: #555555;
+      --border-color: rgba(17, 17, 17, 0.15);
+      --shadow-luxury: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: var(--bg-pearl-gradient);
+      color: var(--royal-black);
+    }
+
+    /* Main Container - ขยับขึ้นมาชิดด้านบนตามต้องการ */
+    .mycard-container {
+      max-width: 800px;
+      margin: 20px auto 40px auto;
+      padding: 0 20px;
+    }
+
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-title i {
+      color: var(--royal-gold);
+    }
+
+    /* Profile / Summary Card */
+    .profile-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 25px;
+      box-shadow: var(--shadow-luxury);
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .edit-profile-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #FAFAFA;
+      border: 1px solid var(--border-color);
+      color: var(--royal-black);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .edit-profile-btn:hover {
+      background: #f0efe9;
+    }
+
+    .profile-avatar-wrap {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto 12px auto;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #F4F3F0;
+      border: 2px solid var(--royal-gold);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .profile-avatar-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-avatar-wrap::after {
+      content: '\f030';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 2px 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .profile-avatar-wrap:hover::after {
+      opacity: 1;
+    }
+
+    .profile-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--royal-black);
+      margin-bottom: 2px;
+    }
+
+    .profile-username {
+      font-size: 0.9rem;
+      color: var(--accent-gray);
+      font-weight: 400;
+      margin-bottom: 4px;
+    }
+
+    .profile-birthday {
+      font-size: 0.85rem;
+      color: #777;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FAFAFA;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      margin-top: 6px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: #FAFAFA;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .stat-box h3 {
+      font-size: 0.8rem;
+      color: var(--accent-gray);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .stat-box .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--royal-black);
+    }
+
+    /* Rarity Breakdown Card */
+    .rarity-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow-luxury);
+    }
+
+    .rarity-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rarity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .rarity-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #FAFAFA;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .rarity-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: #fff;
+    }
+
+    .badge-ssr { background: #ff4757; }
+    .badge-sr { background: #ffa502; }
+    .badge-s { background: #9b59b6; }
+    .badge-a { background: #3498db; }
+    .badge-b { background: #95a5a6; }
+
+    /* Modal / Popup สำหรับแก้ไขโปรไฟล์ */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    
+    .modal-card {
+      background: #FFF; width: 90%; max-width: 360px;
+      border-radius: 24px; padding: 25px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    }
+
+    .modal-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+      text-align: left;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      color: var(--accent-gray);
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 0.95rem;
+      outline: none;
+      background: #FAFAFA;
+    }
+
+    .form-group input:focus {
+      border-color: var(--royal-gold);
+      background: #FFF;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-modal {
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-size: 0.9rem;
+    }
+
+    .btn-cancel {
+      background: #eee;
+      color: #555;
+    }
+
+    .btn-save {
+      background: var(--royal-black);
+      color: #FFF;
+    }
+
+    /* Alert Popup */
+    .alert-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .alert-overlay.show { opacity: 1; pointer-events: auto; }
+    .alert-card {
+      background: #FFF; width: 85%; max-width: 320px;
+      border-radius: 20px; padding: 25px; text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    }
+    .btn-alert {
+      width: 100%;
+      padding: 10px;
+      background: var(--royal-black);
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="mycard-container">
+    <h1 class="page-title"><i class="fa-solid fa-id-card"></i> นามบัตร</h1>
+    
+    <!-- ข้อมูลโปรไฟล์ผู้ใช้ -->
+    <div class="profile-card">
+      <button class="edit-profile-btn" onclick="openEditModal()" title="แก้ไขข้อมูลส่วนตัว">
+        <i class="fa-solid fa-pen"></i>
+      </button>
+
+      <div class="profile-avatar-wrap" id="avatarUploadWrap" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์">
+        <img id="userAvatar" src="https://via.placeholder.com/150" alt="Avatar">
+      </div>
+      <!-- ซ่อน input สำหรับเลือกรูปจากแกลเลอรี -->
+      <input type="file" id="fileInput" accept="image/*" style="display: none;">
+
+      <!-- ข้อมูลผู้ใช้ -->
+      <div class="profile-name" id="userName">กำลังโหลด...</div>
+      <div class="profile-username" id="userUsername">-</div>
+      <div>
+        <span class="profile-birthday" id="userBirthdayWrap">
+          <i class="fa-solid fa-cake-candles" style="color: var(--royal-gold);"></i> <span id="userBirthday">-</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- กล่องแสดงสถิติภาพรวม -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <h3>จำนวนตัวละครที่มี</h3>
+        <div class="stat-value" id="totalCharacters">0</div>
+      </div>
+      <div class="stat-box">
+        <h3>จำนวนสกินทั้งหมด</h3>
+        <div class="stat-value" id="totalSkins">0</div>
+      </div>
+    </div>
+
+    <!-- รายละเอียดจำนวนสกินแต่ละระดับ -->
+    <div class="rarity-card">
+      <h3><i class="fa-solid fa-layer-group" style="color: var(--royal-gold);"></i> สกินแยกตามระดับ</h3>
+      <div class="rarity-list">
+        <div class="rarity-item">
+          <span class="rarity-badge badge-ssr">SSR</span>
+          <span id="count-ssr">0</span>
+        </div>
+        <div class="rarity-item">
+          <span class="rarity-badge badge-sr">SR</span>
+          <span id="count-sr">0</span>
+        </div>
+        <div class="rarity-item">
+          <span class="rarity-badge badge-s">S</span>
+          <span id="count-s">0</span>
+        </div>
+        <div class="rarity-item">
+          <span class="rarity-badge badge-a">A</span>
+          <span id="count-a">0</span>
+        </div>
+        <div class="rarity-item">
+          <span class="rarity-badge badge-b">B</span>
+          <span id="count-b">0</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal แก้ไขข้อมูลส่วนตัว -->
+  <div class="modal-overlay" id="editModalOverlay">
+    <div class="modal-card">
+      <h3><i class="fa-solid fa-user-pen" style="color: var(--royal-gold);"></i> แก้ไขข้อมูลโปรไฟล์</h3>
+      
+      <div class="form-group">
+        <label>ชื่อ (Name)</label>
+        <input type="text" id="editNameInput" placeholder="ระบุชื่อของคุณ">
+      </div>
+      <div class="form-group">
+        <label>ชื่อผู้ใช้งาน (Username)</label>
+        <input type="text" id="editUsernameInput" placeholder="ระบุ username">
+      </div>
+      <div class="form-group">
+        <label>วันเกิด (Birthday)</label>
+        <input type="date" id="editBirthdayInput">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-modal btn-cancel" onclick="closeEditModal()">ยกเลิก</button>
+        <button class="btn-modal btn-save" onclick="saveProfileChanges()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Popup -->
+  <div class="alert-overlay" id="alertOverlay">
+    <div class="alert-card">
+      <h3 id="alertTitle" style="margin-bottom: 8px;">แจ้งเตือน</h3>
+      <p id="alertDesc" style="color: var(--accent-gray); margin-bottom: 10px; font-size: 0.9rem;"></p>
+      <button onclick="closeAlert()" class="btn-alert">ตกลง</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const CLOUDINARY_UPLOAD_PRESET = 'pocket_diary';
+    const CLOUDINARY_CLOUD_NAME = 'ncpkgyfz';
+
+    let currentUser = null;
+
+    window.showAlert = function(title, desc) {
+      document.getElementById('alertTitle').textContent = title;
+      document.getElementById('alertDesc').textContent = desc;
+      document.getElementById('alertOverlay').classList.add('show');
+    }
+
+    window.closeAlert = function() {
+      document.getElementById('alertOverlay').classList.remove('show');
+    }
+
+    window.openEditModal = function() {
+      if (!currentUser) return;
+      document.getElementById('editNameInput').value = currentUser.name || '';
+      document.getElementById('editUsernameInput').value = currentUser.username || '';
+      document.getElementById('editBirthdayInput').value = currentUser.birthday || '';
+      document.getElementById('editModalOverlay').classList.add('show');
+    }
+
+    window.closeEditModal = function() {
+      document.getElementById('editModalOverlay').classList.remove('show');
+    }
+
+    // บันทึกการแก้ไขข้อมูลลง Supabase
+    window.saveProfileChanges = async function() {
+      const newName = document.getElementById('editNameInput').value.trim();
+      const newUsername = document.getElementById('editUsernameInput').value.trim();
+      const newBirthday = document.getElementById('editBirthdayInput').value;
+
+      if (!newName || !newUsername) {
+        showAlert('แจ้งเตือน', 'กรุณากรอกชื่อและ Username ให้เรียบร้อย');
+        return;
+      }
+
+      try {
+        showAlert('กำลังบันทึก', 'กรุณารอสักครู่...');
+
+        const { error: updateErr } = await supabase
+          .from('users')
+          .update({ 
+            name: newName, 
+            username: newUsername, 
+            birthday: newBirthday || null 
+          })
+          .eq('id', currentUser.id);
+
+        if (updateErr) throw updateErr;
+
+        // อัปเดตข้อมูลในตัวแปรและ SessionStorage
+        currentUser.name = newName;
+        currentUser.username = newUsername;
+        currentUser.birthday = newBirthday;
+        sessionStorage.setItem('pocket_diary_user', JSON.stringify(currentUser));
+
+        // อัปเดตแสดงผลบนหน้าจอ
+        renderUserData();
+        closeEditModal();
+        showAlert('สำเร็จ', 'อัปเดตข้อมูลส่วนตัวเรียบร้อยแล้ว');
+
+      } catch (err) {
+        console.error(err);
+        showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+      }
+    }
+
+    function renderUserData() {
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name || currentUser.username || 'ผู้ใช้งาน';
+      document.getElementById('userUsername').textContent = `@${currentUser.username || 'username'}`;
+      
+      const bdayEl = document.getElementById('userBirthday');
+      const bdayWrap = document.getElementById('userBirthdayWrap');
+      if (currentUser.birthday) {
+        const dateObj = new Date(currentUser.birthday);
+        const formattedDate = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        bdayEl.textContent = formattedDate;
+        bdayWrap.style.display = 'inline-flex';
+      } else {
+        bdayEl.textContent = 'ยังไม่ได้ระบุวันเกิด';
+      }
+
+      // แก้ไขให้ดึงจาก profile_image แทน active_skin_full_image
+      if (currentUser.profile_image) {
+        document.getElementById('userAvatar').src = currentUser.profile_image;
+      }
+    }
+
+    async function initMyCard() {
+      const savedUser = sessionStorage.getItem('pocket_diary_user');
+      if (!savedUser) {
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = JSON.parse(savedUser);
+
+      renderUserData();
+      setupAvatarUpload();
+      await loadCollectionStatsSafe();
+    }
+
+    function setupAvatarUpload() {
+      const wrap = document.getElementById('avatarUploadWrap');
+      const fileInput = document.getElementById('fileInput');
+
+      wrap.onclick = () => fileInput.click();
+
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        showAlert('กำลังอัปโหลด', 'กรุณารอสักครู่ กำลังอัปโหลดรูปภาพโปรไฟล์...');
+
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            method: 'POST',
+            body: formData
+          });
+
+          const data = await res.json();
+          if (!data.secure_url) throw new Error('อัปโหลดไป Cloudinary ไม่สำเร็จ');
+
+          const newImageUrl = data.secure_url;
+
+          // แก้ไขให้บันทึกลงคอลัมน์ profile_image แทน
+          const { error: updateErr } = await supabase
+            .from('users')
+            .update({ profile_image: newImageUrl })
+            .eq('id', currentUser.id);
+
+          if (updateErr) throw updateErr;
+
+          currentUser.profile_image = newImageUrl;
+          sessionStorage.setItem('pocket_diary_user', JSON.stringify(currentUser));
+
+          document.getElementById('userAvatar').src = newImageUrl;
+          showAlert('สำเร็จ', 'อัปเดตและบันทึกรูปโปรไฟล์เรียบร้อยแล้ว!');
+
+        } catch (err) {
+          console.error(err);
+          showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถอัปโหลดรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
+        }
+      };
+    }
+
+    async function loadCollectionStatsSafe() {
+      try {
+        const { data: userSkins, error: userSkinsErr } = await supabase
+          .from('user_skins')
+          .select('skin_id')
+          .eq('user_id', currentUser.id);
+
+        if (userSkinsErr) throw userSkinsErr;
+        if (!userSkins || userSkins.length === 0) return;
+
+        const skinIds = userSkins.map(item => item.skin_id);
+
+        const { data: skinDetails, error: skinDetailsErr } = await supabase
+          .from('character_skins')
+          .select('id, character_id, rarity')
+          .in('id', skinIds);
+
+        if (skinDetailsErr) throw skinDetailsErr;
+
+        const skins = skinDetails || [];
+        const totalSkins = skins.length;
+
+        const uniqueCharacters = new Set(
+          skins.map(item => item.character_id).filter(Boolean)
+        );
+        const totalCharacters = uniqueCharacters.size;
+
+        const rarityCounts = { SSR: 0, SR: 0, S: 0, A: 0, B: 0 };
+        skins.forEach(item => {
+          const rarity = item.rarity;
+          if (rarity && rarityCounts[rarity] !== undefined) {
+            rarityCounts[rarity]++;
+          }
+        });
+
+        document.getElementById('totalCharacters').textContent = totalCharacters;
+        document.getElementById('totalSkins').textContent = totalSkins;
+
+        Object.keys(rarityCounts).forEach(rarity => {
+          const el = document.getElementById(`count-${rarity.toLowerCase()}`);
+          if (el) {
+            el.textContent = rarityCounts[rarity];
+          }
+        });
+
+      } catch (err) {
+        console.error('ไม่สามารถโหลดสถิติตัวละครได้:', err);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initMyCard);
+  </script>
+</body>
+</html>
