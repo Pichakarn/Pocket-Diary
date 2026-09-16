@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POCKET DIARY - ร้านค้า</title>
+    <!-- Google Font: Kanit & Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdfbf7 0%, #f4ede2 50%, #eae3d2 100%);
+            color: #2c2c2c;
+            min-height: 100vh;
+            overflow-x: hidden; /* ล็อคซ้ายขวา */
+            overflow-y: auto;  /* เลื่อนขึ้นลงได้อิสระ */
+            display: flex;
+            justify-content: center;
+        }
+
+        .store-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(255, 235, 205, 0.4), transparent 50%),
+                        radial-gradient(circle at bottom left, rgba(220, 235, 252, 0.4), transparent 50%);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 40px;
+        }
+
+        /* Header App */
+        .app-header {
+            padding: 20px 20px 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-title-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-title-box h1 {
+            font-family: 'Prompt', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: 0.5px;
+        }
+
+        .app-icon-symbol {
+            font-size: 24px;
+        }
+
+        /* User Currency Bar */
+        .user-currency-bar {
+            padding: 0 20px 15px 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .currency-pill {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid #e0d6c8;
+            padding: 10px 14px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .currency-label {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .currency-value {
+            font-family: 'Prompt', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Navigation Tabs */
+        .store-tabs {
+            padding: 0 20px 15px 20px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.7);
+            font-family: 'Prompt', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #1c1c1c 0%, #0d0d0d 100%);
+            color: #d4af37;
+            border-color: #1c1c1c;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        /* Content Grid Area */
+        .store-content-area {
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tab-pane {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-pane.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        /* Product Card (ปรับสัดส่วนรูปตัวละคร/สกิน และพื้นหลังให้เป็นทรงโปสเตอร์แนวตั้ง 3:4) */
+        .product-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow: 0 8px 20px rgba(180, 160, 140, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .skin-tier-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #1a1a1a;
+            color: #d4af37;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .product-img-box {
+            width: 100%;
+            aspect-ratio: 3 / 4; /* ล็อคสัดส่วนทรงโปสเตอร์แนวตั้ง */
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f4ede2;
+            margin-bottom: 10px;
+        }
+
+        .product-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-name {
+            font-family: 'Prompt', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            text-align: center;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .product-price-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+            color: #d4af37;
+            border: none;
+            padding: 8px;
+            border-radius: 12px;
+            font-family: 'Prompt', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.15s;
+        }
+
+        .product-price-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Item Row Style (สำหรับหมวด Item สัดส่วน 1:1 จิ๋วแบบแถวแนวนอน) */
+        .item-row-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 14px;
+            box-shadow: 0 8px 20px rgba(180, 160, 140, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .item-row-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .item-row-img {
+            width: 60px;
+            height: 60px;
+            aspect-ratio: 1 / 1; /* ล็อคสัดส่วน 1:1 จิ๋ว */
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f4ede2;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .item-row-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-row-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .item-row-name {
+            font-family: 'Prompt', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .item-row-desc {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        /* Popup & Modal น่ารักๆ */
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(6px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .popup-overlay.active {
+            opacity: 1; pointer-events: auto;
+        }
+
+        .popup-box {
+            width: 85%; max-width: 320px;
+            background: #fff; padding: 24px;
+            border-radius: 28px; text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+            transform: scale(0.85);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 2px solid #f4ede2;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .popup-overlay.active .popup-box {
+            transform: scale(1);
+        }
+
+        .popup-box h3 {
+            font-family: 'Prompt', sans-serif;
+            font-size: 18px; color: #1a1a1a;
+        }
+
+        .popup-box p {
+            font-size: 13px; color: #666; line-height: 1.5;
+        }
+
+        .popup-img-preview {
+            width: 100%;
+            height: 220px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #f4ede2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-img-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .popup-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .popup-btn {
+            flex: 1;
+            background: #1a1a1a; color: #fff; border: none;
+            padding: 12px; border-radius: 14px;
+            font-family: 'Prompt', sans-serif;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .popup-btn-cancel {
+            background: #e0d6c8; color: #444;
+        }
+
+        .empty-state {
+            grid-column: span 2;
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="store-container">
+        <!-- Header -->
+        <div class="app-header">
+            <div class="app-title-box">
+                <span class="app-icon-symbol">🛍️</span>
+                <h1>Pocket Diary Store</h1>
+            </div>
+        </div>
+
+        <!-- User Currency Bar -->
+        <div class="user-currency-bar">
+            <div class="currency-pill">
+                <span class="currency-label">เหรียญทอง</span>
+                <div class="currency-value"><span id="userCoinsVal">0</span> 🪙</div>
+            </div>
+            <div class="currency-pill">
+                <span class="currency-label">คุกกี้สะสม</span>
+                <div class="currency-value"><span id="userCookiesVal">0</span> 🍪</div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="store-tabs">
+            <button class="tab-btn active" onclick="switchStoreTab('character')">👤 ตัวละคร/สกิน</button>
+            <button class="tab-btn" onclick="switchStoreTab('background')">🖼️ พื้นหลัง</button>
+            <button class="tab-btn" onclick="switchStoreTab('item')">📦 ไอเทมอื่นๆ</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="store-content-area">
+            <!-- 1. Character Tab -->
+            <div class="tab-pane active" id="pane-character">
+                <div class="products-grid" id="characterGrid">
+                    <div class="empty-state">กำลังโหลดสินค้าตัวละคร...</div>
+                </div>
+            </div>
+
+            <!-- 2. Background Tab -->
+            <div class="tab-pane" id="pane-background">
+                <div class="products-grid" id="backgroundGrid">
+                    <div class="empty-state">กำลังโหลดสินค้าพื้นหลัง...</div>
+                </div>
+            </div>
+
+            <!-- 3. Item Tab -->
+            <div class="tab-pane" id="pane-item">
+                <div id="itemGrid" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="empty-state">กำลังโหลดสินค้าไอเทม...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup สำหรับยืนยันการซื้อหรือดูตัวอย่างสินค้า -->
+    <div class="popup-overlay" id="storePopup">
+        <div class="popup-box">
+            <h3 id="popupTitle">รายละเอียดสินค้า</h3>
+            <div class="popup-img-preview" id="popupImgBox">
+                <img id="popupImg" src="" alt="Product">
+            </div>
+            <p id="popupDesc">คำอธิบายสินค้าและราคา...</p>
+            <div class="popup-actions" id="popupActions">
+                <button class="popup-btn popup-btn-cancel" onclick="closeStorePopup()">ยกเลิก</button>
+                <button class="popup-btn" id="confirmBuyBtn" onclick="executePurchase()">ยืนยันซื้อ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup แจ้งเตือนทั่วไป (แบบน่ารัก) -->
+    <div class="popup-overlay" id="alertPopup">
+        <div class="popup-box">
+            <h3 id="alertTitle">แจ้งเตือน</h3>
+            <p id="alertMessage">ข้อความแจ้งเตือน...</p>
+            <button class="popup-btn" onclick="closeAlertPopup()">ตกลง</button>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Config
+        const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let selectedProduct = null;
+        let allStoreItems = [];
+
+        // โหลดข้อมูลผู้ใช้และสินค้าในร้าน
+        async function initStore() {
+            try {
+                let userDataStr = sessionStorage.getItem('pocket_diary_user');
+                if (!userDataStr) {
+                    showAlertPopup("แจ้งเตือน", "กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
+                    setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+                    return;
+                }
+                currentUser = JSON.parse(userDataStr);
+
+                // ดึงข้อมูลยูสเซอร์ล่าสุดจาก Supabase Realtime/DB
+                const { data: userDb, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (!error && userDb) {
+                    currentUser = userDb;
+                    sessionStorage.setItem('pocket_diary_user', JSON.stringify(currentUser));
+                }
+
+                renderUserCurrency();
+                setupRealtimeSubscription();
+                await fetchStoreProducts();
+
+            } catch (err) {
+                console.error("Init store error:", err);
+            }
+        }
+
+        function renderUserCurrency() {
+            document.getElementById('userCoinsVal').textContent = (currentUser.coins || 0).toLocaleString();
+            document.getElementById('userCookiesVal').textContent = (currentUser.cookies || 0).toLocaleString();
+        }
+
+        function setupRealtimeSubscription() {
+            supabaseClient
+                .channel('public:users:store')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${currentUser.id}` }, payload => {
+                    currentUser = payload.new;
+                    sessionStorage.setItem('pocket_diary_user', JSON.stringify(currentUser));
+                    renderUserCurrency();
+                })
+                .subscribe();
+        }
+
+        // สลับแท็บในร้านค้า
+        function switchStoreTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+            if (tab === 'character') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('pane-character').classList.add('active');
+            } else if (tab === 'background') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('pane-background').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('pane-item').classList.add('active');
+            }
+        }
+
+        // ดึงรายการสินค้าจากตาราง store
+        async function fetchStoreProducts() {
+            const { data, error } = await supabaseClient
+                .from('store')
+                .select('*');
+
+            if (error || !data || data.length === 0) {
+                // ข้อมูลตัวอย่างทดสอบกรณีตารางยังว่างอยู่
+                allStoreItems = [
+                    { id: '1', name: 'Aria (Default)', type: 'Character', price: 1000, currency_type: 'coins', image_url: 'https://via.placeholder.com/300x400', full_image_url: 'https://via.placeholder.com/600x800', tier: 'A' },
+                    { id: '2', name: 'Royal Garden', type: 'Background', price: 500, currency_type: 'coins', image_url: 'https://via.placeholder.com/300x400', full_image_url: 'https://via.placeholder.com/600x800', tier: '' },
+                    { id: '3', name: 'Rose Bouquet', type: 'Item', price: 50, currency_type: 'cookies', image_url: 'https://via.placeholder.com/200', description: 'ดอกกุหลาบเพิ่มความสัมพันธ์เพื่อน 5 แต้ม', properties: { category: 'relationship', value: 5 } }
+                ];
+            } else {
+                allStoreItems = data;
+            }
+
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const charContainer = document.getElementById('characterGrid');
+            const bgContainer = document.getElementById('backgroundGrid');
+            const itemContainer = document.getElementById('itemGrid');
+
+            const chars = allStoreItems.filter(i => i.type === 'Character');
+            const bgs = allStoreItems.filter(i => i.type === 'Background');
+            const items = allStoreItems.filter(i => i.type === 'Item');
+
+            // 1. Render Characters
+            if (chars.length === 0) {
+                charContainer.innerHTML = '<div class="empty-state">ยังไม่มีสินค้าตัวละครในร้านค้า</div>';
+            } else {
+                charContainer.innerHTML = chars.map(c => `
+                    <div class="product-card" onclick='openProductDetail(${JSON.stringify(c)})'>
+                        ${c.tier ? `<div class="skin-tier-badge">${c.tier}</div>` : ''}
+                        <div class="product-img-box">
+                            <img src="${c.image_url}" alt="${c.name}">
+                        </div>
+                        <div class="product-name">${c.name}</div>
+                        <button class="product-price-btn">
+                            ${c.price.toLocaleString()} ${c.currency_type === 'coins' ? '🪙' : '🍪'}
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            // 2. Render Backgrounds
+            if (bgs.length === 0) {
+                bgContainer.innerHTML = '<div class="empty-state">ยังไม่มีสินค้าพื้นหลังในร้านค้า</div>';
+            } else {
+                bgContainer.innerHTML = bgs.map(b => `
+                    <div class="product-card" onclick='openProductDetail(${JSON.stringify(b)})'>
+                        <div class="product-img-box">
+                            <img src="${b.image_url}" alt="${b.name}">
+                        </div>
+                        <div class="product-name">${b.name}</div>
+                        <button class="product-price-btn">
+                            ${b.price.toLocaleString()} ${b.currency_type === 'coins' ? '🪙' : '🍪'}
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            // 3. Render Items (แสดงแบบแถวแนวนอนพร้อมรูปทรง 1:1 จิ๋ว)
+            if (items.length === 0) {
+                itemContainer.innerHTML = '<div class="empty-state">ยังไม่มีสินค้าไอเทมในร้านค้า</div>';
+            } else {
+                itemContainer.innerHTML = items.map(i => `
+                    <div class="item-row-card" onclick='openProductDetail(${JSON.stringify(i)})'>
+                        <div class="item-row-img">
+                            <img src="${i.image_url}" alt="${i.name}">
+                        </div>
+                        <div class="item-row-info">
+                            <div class="item-row-name">${i.name}</div>
+                            <div class="item-row-desc">${i.description || 'ไอเทมพิเศษทั่วไป'}</div>
+                        </div>
+                        <button class="product-price-btn" style="width: auto; padding: 8px 14px;">
+                            ${i.price.toLocaleString()} ${i.currency_type === 'coins' ? '🪙' : '🍪'}
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // กดดูสินค้า เด้งป๊อปอัพแสดงรายละเอียด
+        function openProductDetail(product) {
+            selectedProduct = product;
+            document.getElementById('popupTitle').textContent = product.name;
+            document.getElementById('popupImg').src = product.full_image_url || product.image_url;
+            
+            let currencyIcon = product.currency_type === 'coins' ? '🪙 เหรียญทอง' : '🍪 คุกกี้';
+            document.getElementById('popupDesc').innerHTML = `ราคา: <b>${product.price.toLocaleString()} ${currencyIcon}</b><br>${product.description || 'กดปุ่มยืนยันด้านล่างเพื่อซื้อสินค้าชิ้นนี้'}`;
+            
+            document.getElementById('storePopup').classList.add('active');
+        }
+
+        function closeStorePopup() {
+            document.getElementById('storePopup').classList.remove('active');
+            selectedProduct = null;
+        }
+
+        // ดำเนินการซื้อสินค้า
+        async function executePurchase() {
+            if (!selectedProduct) return;
+
+            const cost = selectedProduct.price;
+            const currency = selectedProduct.currency_type; 
+            const userBalance = currency === 'coins' ? (currentUser.coins || 0) : (currentUser.cookies || 0);
+
+            if (userBalance < cost) {
+                closeStorePopup();
+                showAlertPopup("เงินไม่พอ", `คุณมี ${currency === 'coins' ? 'เหรียญทอง' : 'คุกกี้'} ไม่เพียงพอสำหรับซื้อสินค้านี้`);
+                return;
+            }
+
+            const updatedBalance = userBalance - cost;
+            const updateField = currency === 'coins' ? { coins: updatedBalance } : { cookies: updatedBalance };
+
+            const { error: updateErr } = await supabaseClient
+                .from('users')
+                .update(updateField)
+                .eq('id', currentUser.id);
+
+            if (updateErr) {
+                showAlertPopup("ข้อผิดพลาด", "ไม่สามารถทำรายการซื้อได้ในขณะนี้");
+                return;
+            }
+
+            if (currency === 'coins') currentUser.coins = updatedBalance;
+            else currentUser.cookies = updatedBalance;
+            sessionStorage.setItem('pocket_diary_user', JSON.stringify(currentUser));
+            renderUserCurrency();
+
+            await deliverProductToUser(selectedProduct);
+
+            closeStorePopup();
+            showAlertPopup("ซื้อสำเร็จ! 🎉", `คุณได้รับ "${selectedProduct.name}" เรียบร้อยแล้ว`);
+        }
+
+        async function deliverProductToUser(product) {
+            try {
+                if (product.type === 'Character') {
+                    let userSkins = currentUser.owned_skins || [];
+                    if (!userSkins.includes(product.id)) {
+                        userSkins.push(product.id);
+                        await supabaseClient.from('users').update({ owned_skins: userSkins }).eq('id', currentUser.id);
+                        currentUser.owned_skins = userSkins;
+                        sessionStorage.setItem('pocket_diary_user', JSON.stringify(currentUser));
+                    }
+                } else if (product.type === 'Background' || product.type === 'Item') {
+                    await supabaseClient.from('inventory').insert({
+                        user_id: currentUser.id,
+                        item_id: product.id,
+                        name: product.name,
+                        type: product.type.toLowerCase(),
+                        image_url: product.image_url,
+                        properties: product.properties || {}
+                    });
+                }
+            } catch (e) {
+                console.error("Delivery error:", e);
+            }
+        }
+
+        function showAlertPopup(title, message) {
+            document.getElementById('alertTitle').textContent = title;
+            document.getElementById('alertMessage').textContent = message;
+            document.getElementById('alertPopup').classList.add('active');
+        }
+
+        function closeAlertPopup() {
+            document.getElementById('alertPopup').classList.remove('active');
+        }
+
+        initStore();
+    </script>
+</body>
+</html>
