@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>POCKET DIARY - กรอกโค้ด</title>
+  
+  <!-- Google Font: Prompt -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-pearl: #FDFBFB;
+      --bg-pearl-gradient: linear-gradient(135deg, #FFFFFF 0%, #EFECE6 100%);
+      --royal-black: #111111;
+      --royal-gold: #D4AF37;
+      --accent-gray: #555555;
+      --border-color: rgba(17, 17, 17, 0.15);
+      --shadow-luxury: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg-pearl-gradient);
+      color: var(--royal-black);
+    }
+
+    /* Top HUD */
+    .top-hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      padding: 0 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(253, 251, 251, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--royal-black);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
+
+    .back-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Main Container */
+    .main-container {
+      position: absolute;
+      top: 60px; bottom: 0; left: 0; right: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      box-shadow: var(--shadow-luxury);
+      padding: 25px;
+      overflow-y: auto;
+    }
+
+    /* Card Box for Code Redemption */
+    .redeem-box {
+      width: 100%;
+      background: #FAFAFA;
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.03);
+    }
+
+    .redeem-icon {
+      font-size: 3.5rem;
+      color: var(--royal-gold);
+      margin-bottom: 15px;
+    }
+
+    .redeem-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--royal-black);
+    }
+
+    .redeem-desc {
+      font-size: 0.85rem;
+      color: var(--accent-gray);
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    .code-input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      font-size: 1rem;
+      text-align: center;
+      outline: none;
+      background: #FFFFFF;
+      color: var(--royal-black);
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: border-color 0.2s;
+    }
+
+    .code-input:focus {
+      border-color: var(--royal-black);
+    }
+
+    .redeem-submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--royal-black);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(17,17,17,0.2);
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .redeem-submit-btn:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+
+    /* Popup Modal (Custom Cute Popup) */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    
+    .popup-overlay.show {
+      opacity: 1; pointer-events: auto;
+    }
+
+    .popup-card {
+      background: #FFFFFF;
+      width: 85%; max-width: 340px;
+      border-radius: 24px;
+      padding: 25px 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      text-align: center;
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .popup-overlay.show .popup-card {
+      transform: scale(1);
+    }
+
+    .popup-icon {
+      font-size: 2.8rem;
+      margin-bottom: 12px;
+    }
+
+    .popup-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .popup-desc {
+      font-size: 0.88rem;
+      color: var(--accent-gray);
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .popup-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--royal-black);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top HUD -->
+  <header class="top-hud">
+    <a href="phone.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> โทรศัพท์
+    </a>
+    <div style="font-weight: 700; font-size: 0.95rem; letter-spacing: 0.5px;">กรอกโค้ดของขวัญ</div>
+    <div style="width: 60px;"></div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <div class="redeem-box">
+      <div class="redeem-icon">
+        <i class="fa-solid fa-gift"></i>
+      </div>
+      <div class="redeem-title">เติมโค้ดรับของรางวัล</div>
+      <div class="redeem-desc">กรอกโค้ดลับหรือโค้ดกิจกรรมที่คุณได้รับ เพื่อรับเหรียญ คุกกี้ หรือไอเท็มพิเศษเข้าบัญชีของคุณ</div>
+      
+      <input type="text" id="codeTextInp" class="code-input" placeholder="กรอกโค้ดที่นี่...">
+      <button class="redeem-submit-btn" onclick="handleRedeemCode()">ยืนยันการรับโค้ด</button>
+    </div>
+  </div>
+
+  <!-- Custom Cute Popup Modal -->
+  <div class="popup-overlay" id="customPopup">
+    <div class="popup-card">
+      <div class="popup-icon" id="popupIcon"><i class="fa-solid fa-circle-check" style="color: #4CAF50;"></i></div>
+      <div class="popup-title" id="popupTitle">สำเร็จ</div>
+      <div class="popup-desc" id="popupDesc">ได้รับของรางวัลเรียบร้อยแล้ว</div>
+      <button class="popup-btn" onclick="closePopup()">ตกลง</button>
+    </div>
+  </div>
+
+  <!-- Supabase Client & Logic -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+
+    // ฟังก์ชันเปิด Popup น่ารักแทนการใช้ Alert ปกติ
+    window.showPopup = function(type, title, desc) {
+      const iconEl = document.getElementById('popupIcon');
+      if (type === 'success') {
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #4CAF50;"></i>';
+      } else {
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="color: #e53935;"></i>';
+      }
+      document.getElementById('popupTitle').textContent = title;
+      document.getElementById('popupDesc').textContent = desc;
+      document.getElementById('customPopup').classList.add('show');
+    }
+
+    window.closePopup = function() {
+      document.getElementById('customPopup').classList.remove('show');
+    }
+
+    // ตรวจสอบ Session ผู้ใช้เมื่อโหลดหน้าเว็บ
+    async function initAuth() {
+      const savedUser = sessionStorage.getItem('pocket_diary_user');
+      if (!savedUser) {
+        // หากไม่มีข้อมูลใน Session ให้พาผู้ใช้วิเคราะห์กลับไปหน้า Login
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = JSON.parse(savedUser);
+    }
+
+    // ฟังก์ชันจัดการกดรับโค้ด
+    window.handleRedeemCode = async function() {
+      const codeInput = document.getElementById('codeTextInp');
+      const inputCode = codeInput.value.trim();
+
+      if (!inputCode) {
+        showPopup('error', 'แจ้งเตือน', 'กรุณากรอกโค้ดก่อนกดยืนยัน');
+        return;
+      }
+
+      try {
+        // 1. ค้นหาโค้ดในฐานข้อมูล Supabase
+        const { data: codeData, error: codeError } = await supabase
+          .from('codes')
+          .select('*')
+          .eq('code_text', inputCode)
+          .single();
+
+        if (codeError || !codeData) {
+          showPopup('error', 'ไม่พบโค้ดนี้', 'ขออภัย ไม่พบโค้ดดังกล่าวในระบบ หรือโค้ดอาจหมดอายุแล้ว');
+          return;
+        }
+
+        // 2. ตรวจสอบว่าเคยกรอกโค้ดนี้ไปแล้วหรือยัง
+        const { data: redeemedData, error: redCheckErr } = await supabase
+          .from('user_redeemed_codes')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .eq('code_id', codeData.id)
+          .single();
+
+        if (redeemedData) {
+          showPopup('error', 'ไม่สามารถใช้ซ้ำได้', 'คุณเคยกรอกโค้ดนี้ไปแล้ว ไม่สามารถใช้งานซ้ำได้อีก');
+          return;
+        }
+
+        // 3. บันทึกประวัติการกรอกโค้ดของผู้ใช้
+        const { error: insertErr } = await supabase
+          .from('user_redeemed_codes')
+          .insert([{ user_id: currentUser.id, code_id: codeData.id }]);
+
+        if (insertErr) throw insertErr;
+
+        // 4. ดำเนินการเพิ่มของรางวัลตามประเภท (Coins, Cookies, Background หรือ Item)
+        let rewardMsg = '';
+        if (codeData.reward_type === 'coins') {
+          const addAmount = parseInt(codeData.reward_value) || 0;
+          currentUser.coins = (currentUser.coins || 0) + addAmount;
+          
+          await supabase
+            .from('users')
+            .update({ coins: currentUser.coins })
+            .eq('id', currentUser.id);
+
+          rewardMsg = `ได้รับเหรียญจำนวน ${addAmount} เหรียญ`;
+        } else if (codeData.reward_type === 'cookies') {
+          const addCookies = parseInt(codeData.reward_value) || 0;
+          currentUser.cookies = (currentUser.cookies || 0) + addCookies;
+          
+          await supabase
+            .from('users')
+            .update({ cookies: currentUser.cookies })
+            .eq('id', currentUser.id);
+
+          rewardMsg = `ได้รับคุกกี้จำนวน ${addCookies} ชิ้น`;
+        } else if (codeData.reward_type === 'background') {
+          // เพิ่มพื้นหลังลงในคลัง (inventory)
+          await supabase
+            .from('user_inventory')
+            .insert([{
+              user_id: currentUser.id,
+              name: 'พื้นหลังพิเศษจากโค้ด',
+              item_type: 'background',
+              image: codeData.reward_value
+            }]);
+
+          rewardMsg = 'ได้รับพื้นหลังเข้าสู่คลังเก็บของ (Inventory) เรียบร้อยแล้ว';
+        } else {
+          rewardMsg = `ได้รับของรางวัลพิเศษ: ${codeData.reward_value}`;
+        }
+
+        // อัปเดตข้อมูล Session ล่าสุด
+        sessionStorage.setItem('pocket_diary_user', JSON.stringify(currentUser));
+
+        codeInput.value = '';
+        showPopup('success', 'รับของรางวัลสำเร็จ!', rewardMsg);
+
+      } catch (err) {
+        console.error(err);
+        showPopup('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถทำรายการได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initAuth);
+  </script>
+</body>
+</html>
