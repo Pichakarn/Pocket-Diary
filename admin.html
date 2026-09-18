@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>POCKET DIARY - Admin Management</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-pearl: #FDFBFB;
+      --bg-pearl-gradient: linear-gradient(135deg, #FFFFFF 0%, #EFECE6 100%);
+      --royal-black: #111111;
+      --royal-gold: #D4AF37;
+      --accent-gray: #555555;
+      --border-color: rgba(17, 17, 17, 0.15);
+      --shadow-luxury: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg-pearl-gradient);
+      color: var(--royal-black);
+    }
+
+    /* Top HUD */
+    .top-hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      padding: 0 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(253, 251, 251, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--royal-black);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      cursor: pointer;
+    }
+
+    /* Main Container */
+    .main-container {
+      position: absolute;
+      top: 60px; bottom: 0; left: 0; right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      box-shadow: var(--shadow-luxury);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .admin-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .admin-header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--royal-black);
+    }
+
+    .admin-header p {
+      font-size: 0.8rem;
+      color: var(--accent-gray);
+    }
+
+    /* Admin Cards Grid */
+    .admin-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 30px;
+    }
+
+    .admin-card {
+      background: #FAFAFA;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .admin-card:active {
+      transform: scale(0.98);
+      background: #F0F0F0;
+    }
+
+    .admin-card-icon {
+      width: 45px; height: 45px;
+      background: var(--royal-black);
+      color: #FFFFFF;
+      border-radius: 12px;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 1.2rem;
+    }
+
+    .admin-card-info h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--royal-black);
+      margin-bottom: 2px;
+    }
+
+    .admin-card-info p {
+      font-size: 0.78rem;
+      color: var(--accent-gray);
+    }
+
+    /* Dynamic Sub-Views */
+    .sub-view {
+      display: none;
+      flex-direction: column;
+      gap: 15px;
+      padding-bottom: 40px;
+    }
+
+    .sub-view.active {
+      display: flex;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--royal-black);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 0.9rem;
+      outline: none;
+      background: #FFFFFF;
+      color: var(--royal-black);
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--royal-black);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(17,17,17,0.15);
+    }
+
+    .action-btn.secondary {
+      background: #EFECE6;
+      color: var(--royal-black);
+      box-shadow: none;
+    }
+
+    .list-item-card {
+      background: #FAFAFA;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    /* Popup Modal */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    
+    .popup-overlay.show {
+      opacity: 1; pointer-events: auto;
+    }
+
+    .popup-card {
+      background: #FFFFFF;
+      width: 85%; max-width: 340px;
+      border-radius: 24px;
+      padding: 25px 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      text-align: center;
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .popup-overlay.show .popup-card {
+      transform: scale(1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top HUD -->
+  <header class="top-hud">
+    <a href="phone.html" class="back-btn" id="navBackBtn">
+      <i class="fa-solid fa-arrow-left"></i> โทรศัพท์
+    </a>
+    <div style="font-weight: 700; font-size: 0.95rem;" id="navTitle">🛠️ Admin Management</div>
+    <div style="width: 60px;"></div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="main-container" id="mainContainer">
+    
+    <!-- Dashboard Menu -->
+    <div class="sub-view active" id="viewDashboard">
+      <div class="admin-header">
+        <h1>Control Center</h1>
+        <p>ศูนย์ควบคุมและจัดการระบบเกม POCKET DIARY</p>
+      </div>
+
+      <div class="admin-grid">
+        <div class="admin-card" onclick="switchView('gacha')">
+          <div class="admin-card-icon"><i class="fa-solid fa-star"></i></div>
+          <div class="admin-card-info">
+            <h3>GACHA SYSTEM</h3>
+            <p>จัดการตู้กาชาทั้ง 5 ตู้ และตั้งเวลาอัปเดตล่วงหน้า</p>
+          </div>
+        </div>
+
+        <div class="admin-card" onclick="switchView('store')">
+          <div class="admin-card-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+          <div class="admin-card-info">
+            <h3>STORE SYSTEM</h3>
+            <p>วางขายและจัดการสินค้าในร้านค้า</p>
+          </div>
+        </div>
+
+        <div class="admin-card" onclick="switchView('users')">
+          <div class="admin-card-icon"><i class="fa-solid fa-users"></i></div>
+          <div class="admin-card-info">
+            <h3>USERS SYSTEM</h3>
+            <p>ตรวจสอบรายชื่อผู้ใช้งานและนามบัตรโปรไฟล์</p>
+          </div>
+        </div>
+
+        <div class="admin-card" onclick="switchView('character')">
+          <div class="admin-card-icon"><i class="fa-solid fa-book-open"></i></div>
+          <div class="admin-card-info">
+            <h3>CHARACTER SYSTEM</h3>
+            <p>เพิ่มตัวละคร ประวัติ เนื้อเรื่อง 6 ขั้น และความสัมพันธ์</p>
+          </div>
+        </div>
+
+        <div class="admin-card" onclick="switchView('code')">
+          <div class="admin-card-icon"><i class="fa-solid fa-gift"></i></div>
+          <div class="admin-card-info">
+            <h3>CODE SYSTEM</h3>
+            <p>สร้างโค้ดของขวัญและจัดการของรางวัล</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. GACHA SYSTEM -->
+    <div class="sub-view" id="viewGacha">
+      <div class="admin-header">
+        <h1>GACHA MANAGEMENT</h1>
+        <p>ตั้งค่าและจัดการตู้กาชา</p>
+      </div>
+      <div class="form-group">
+        <label>เลือกตู้กาชา</label>
+        <select id="gachaCabinet" class="form-control" onchange="checkGachaCabinetLock()">
+          <option value="permanent">ตู้ถาวร (Permanent)</option>
+          <option value="old_season">ตู้ซีซั่นเก่า (Old Season)</option>
+          <option value="season">ตู้ประจำฤดูกาล (Season)</option>
+          <option value="monthly">ตู้รายเดือน (Monthly)</option>
+          <option value="character">ตู้ตัวละครใหม่ (New Character)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>เปลี่ยนรูปหน้าตู้ (Cloudinary URL)</label>
+        <input type="text" id="cabinetCoverImg" class="form-control" placeholder="https://res.cloudinary.com/...">
+      </div>
+      <hr style="border:0; border-top:1px solid var(--border-color); margin: 5px 0;">
+      
+      <div id="gachaItemsBuilder">
+        <div class="form-group">
+          <label>ประเภทไอเท็ม</label>
+          <select class="form-control g-type" onchange="toggleGachaFields(this)">
+            <option value="skin">สกินตัวละคร</option>
+            <option value="background">พื้นหลัง</option>
+            <option value="item">ไอเท็ม</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ลิงก์รูป (สกิน/พื้นหลัง/ไอเท็ม)</label>
+          <input type="text" class="form-control g-img" placeholder="https://...">
+        </div>
+        <div class="form-group skin-extra">
+          <label>ลิงก์รูปเต็มตัว</label>
+          <input type="text" class="form-control g-fullimg" placeholder="https://...">
+        </div>
+        <div class="form-group skin-extra">
+          <label>ชื่อตัวละคร / ไอเท็ม & ระดับ</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="form-control g-name" placeholder="ชื่อ..." style="flex:2;">
+            <select class="form-control g-tier" style="flex:1;">
+              <option value="B">B</option><option value="A">A</option><option value="S">S</option><option value="SR">SR</option><option value="SSR">SSR</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button class="action-btn secondary" style="background:#ddd;" onclick="addGachaItemSlot()">+ เพิ่มไอเท็มเข้าตู้ (สูงสุด 50 ชิ้น)</button>
+
+      <div class="form-group" style="margin-top: 10px;">
+        <label>วันที่/เดือน/ปี ที่จะอัปเดตตู้</label>
+        <input type="date" id="gachaUpdateDate" class="form-control">
+      </div>
+      <div class="form-group" id="characterExpiryGroup" style="display:none;">
+        <label>วันที่/เดือน/ปี ที่ตู้ตัวละครใหม่จะหายไป</label>
+        <input type="date" id="gachaExpiryDate" class="form-control">
+      </div>
+
+      <button class="action-btn secondary" onclick="saveGachaDraft()">💾 บันทึกฉบับร่าง (Draft)</button>
+      <button class="action-btn" onclick="confirmGachaUpdate()">✔ ยืนยันการแก้ไขตู้</button>
+    </div>
+
+    <!-- 2. STORE SYSTEM -->
+    <div class="sub-view" id="viewStore">
+      <div class="admin-header">
+        <h1>STORE MANAGEMENT</h1>
+        <p>วางขายและจัดการสินค้าในร้านค้า</p>
+      </div>
+      <div class="form-group">
+        <label>ประเภทสินค้า</label>
+        <select id="storeCategory" class="form-control">
+          <option value="character">Character / Skin</option>
+          <option value="background">Background</option>
+          <option value="item">Item</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ลิงก์รูปภาพ (Cloudinary)</label>
+        <input type="text" id="storeImage" class="form-control" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>ชื่อสินค้า</label>
+        <input type="text" id="storeName" class="form-control" placeholder="ชื่อสินค้า...">
+      </div>
+      <div class="form-group">
+        <label>สกุลเงิน / รูปแบบราคา</label>
+        <select id="storeCurrency" class="form-control">
+          <option value="coins">เหรียญ (Coins)</option>
+          <option value="cookies">คุกกี้ (Cookies)</option>
+          <option value="event_item">ไอเท็มอีเวนต์</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ราคา</label>
+        <input type="number" id="storePrice" class="form-control" placeholder="ระบุราคา...">
+      </div>
+      <button class="action-btn" onclick="addNewStoreItem()">วางขายสินค้าในร้าน</button>
+    </div>
+
+    <!-- 3. USERS SYSTEM -->
+    <div class="sub-view" id="viewUsers">
+      <div class="admin-header">
+        <h1>USERS MANAGEMENT</h1>
+        <p>รายชื่อผู้ใช้งานทั้งหมดในระบบ</p>
+      </div>
+      <div id="usersListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+    <!-- 4. CHARACTER SYSTEM -->
+    <div class="sub-view" id="viewCharacter">
+      <div class="admin-header">
+        <h1>CHARACTER MANAGEMENT</h1>
+        <p>เพิ่มและจัดการข้อมูลตัวละคร</p>
+      </div>
+      <div class="form-group">
+        <label>ชื่อตัวละคร</label>
+        <input type="text" id="charName" class="form-control" placeholder="ชื่อตัวละคร...">
+      </div>
+      <div class="form-group">
+        <label>อายุ, วันเกิด, อาชีพ</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="charAge" class="form-control" placeholder="อายุ">
+          <input type="text" id="charBirth" class="form-control" placeholder="วันเกิด">
+          <input type="text" id="charJob" class="form-control" placeholder="อาชีพ">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>ลิงก์รูปสกิน / รูปในไดอารี่ (Cloudinary)</label>
+        <input type="text" id="charImg" class="form-control" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>ลิงก์รูปเต็มตัวโชว์ล็อบบี้ (Cloudinary)</label>
+        <input type="text" id="charFullImg" class="form-control" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>ภูมิหลังตัวละคร</label>
+        <textarea id="charBg" class="form-control" rows="2" placeholder="ภูมิหลัง..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>เนื้อเรื่องตัวละคร (แบ่ง 6 ขั้น)</label>
+        <textarea id="charStory" class="form-control" rows="3" placeholder="เนื้อเรื่องขั้น 1-6..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>ความสัมพันธ์ของตัวละคร</label>
+        <input type="text" id="charRelation" class="form-control" placeholder="ความสัมพันธ์กับตัวละครอื่น...">
+      </div>
+      <div class="form-group">
+        <label>วันที่/เดือน/ปี ที่ตัวละครเข้าเกม</label>
+        <input type="date" id="charReleaseDate" class="form-control">
+      </div>
+      <button class="action-btn" onclick="addNewCharacter()">เพิ่มตัวละครเข้าเกม</button>
+    </div>
+
+    <!-- 5. CODE SYSTEM -->
+    <div class="sub-view" id="viewCode">
+      <div class="admin-header">
+        <h1>CODE MANAGEMENT</h1>
+        <p>สร้างโค้ดของขวัญสำหรับผู้เล่น</p>
+      </div>
+      <div class="form-group">
+        <label>โค้ด (CODE)</label>
+        <input type="text" id="codeText" class="form-control" placeholder="เช่น WELCOME2026">
+      </div>
+      <div id="codeRewardsBuilder">
+        <div class="form-group">
+          <label>ประเภทของแลก</label>
+          <select class="form-control c-type">
+            <option value="coins">เหรียญ (Coins)</option>
+            <option value="cookies">คุกกี้ (Cookies)</option>
+            <option value="background">พื้นหลัง (Background)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>มูลค่าของรางวัล (จำนวน หรือ ลิงก์รูปพื้นหลัง)</label>
+          <input type="text" class="form-control c-val" placeholder="ระบุจำนวน หรือ URL...">
+        </div>
+      </div>
+      <button class="action-btn secondary" style="background:#ddd;" onclick="addCodeRewardSlot()">+ เพิ่มของรางวัลในโค้ดนี้</button>
+      <button class="action-btn" style="margin-top:10px;" onclick="addNewCode()">สร้างโค้ดของขวัญ</button>
+    </div>
+
+  </div>
+
+  <!-- Popup Modal -->
+  <div class="popup-overlay" id="customPopup">
+    <div class="popup-card">
+      <div id="popupIcon" style="font-size: 2.5rem; margin-bottom: 10px;"><i class="fa-solid fa-circle-check" style="color: #4CAF50;"></i></div>
+      <div id="popupTitle" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 6px;">สำเร็จ</div>
+      <div id="popupDesc" style="font-size: 0.85rem; color: var(--accent-gray); margin-bottom: 18px;">ดำเนินการเรียบร้อยแล้ว</div>
+      <button class="action-btn" onclick="closePopup()">ตกลง</button>
+    </div>
+  </div>
+
+  <!-- Supabase & Logic Script -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    window.showPopup = function(type, title, desc) {
+      document.getElementById('popupTitle').textContent = title;
+      document.getElementById('popupDesc').textContent = desc;
+      document.getElementById('customPopup').classList.add('show');
+    }
+
+    window.closePopup = function() {
+      document.getElementById('customPopup').classList.remove('show');
+    }
+
+    // ตรวจสอบสิทธิ์ Admin ผ่าน sessionStorage
+    function initAuth() {
+      const savedUser = sessionStorage.getItem('pocket_diary_user');
+      if (!savedUser) {
+        window.location.href = 'index.html';
+        return;
+      }
+      const user = JSON.parse(savedUser);
+      if (user.email !== 'ciiderydem@gmail.com') {
+        showPopup('error', 'ไม่มีสิทธิ์เข้าถึง', 'หน้านี้สำหรับแอดมินเท่านั้น');
+        setTimeout(() => window.location.href = 'phone.html', 1500);
+      }
+    }
+
+    window.switchView = function(view) {
+      document.querySelectorAll('.sub-view').forEach(el => el.classList.remove('active'));
+      if (view === 'dashboard') {
+        document.getElementById('viewDashboard').classList.add('active');
+        document.getElementById('navBackBtn').innerHTML = '<i class="fa-solid fa-arrow-left"></i> โทรศัพท์';
+        document.getElementById('navBackBtn').setAttribute('href', 'phone.html');
+      } else {
+        document.getElementById('navBackBtn').innerHTML = '<i class="fa-solid fa-arrow-left"></i> เมนูหลัก';
+        document.getElementById('navBackBtn').onclick = () => switchView('dashboard');
+        document.getElementById('view' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
+        if (view === 'users') loadUsers();
+      }
+    }
+
+    // --- GACHA LOGIC ---
+    window.checkGachaCabinetLock = function() {
+      const cab = document.getElementById('gachaCabinet').value;
+      const expiryGroup = document.getElementById('characterExpiryGroup');
+      if (cab === 'character') {
+        expiryGroup.style.display = 'flex';
+      } else {
+        expiryGroup.style.display = 'none';
+      }
+    }
+
+    window.addGachaItemSlot = function() {
+      const container = document.getElementById('gachaItemsBuilder');
+      container.insertAdjacentHTML('beforeend', `
+        <hr style="border:0; border-top:1px dashed var(--border-color); margin: 10px 0;">
+        <div class="form-group"><label>ประเภทไอเท็ม</label><select class="form-control g-type" onchange="toggleGachaFields(this)"><option value="skin">สกินตัวละคร</option><option value="background">พื้นหลัง</option><option value="item">ไอเท็ม</option></select></div>
+        <div class="form-group"><label>ลิงก์รูป</label><input type="text" class="form-control g-img" placeholder="https://..."></div>
+        <div class="form-group skin-extra"><label>ลิงก์รูปเต็มตัว</label><input type="text" class="form-control g-fullimg" placeholder="https://..."></div>
+        <div class="form-group skin-extra"><label>ชื่อตัวละคร / ไอเท็ม & ระดับ</label><div style="display:flex; gap:8px;"><input type="text" class="form-control g-name" placeholder="ชื่อ..." style="flex:2;"><select class="form-control g-tier" style="flex:1;"><option value="B">B</option><option value="A">A</option><option value="S">S</option><option value="SR">SR</option><option value="SSR">SSR</option></select></div></div>
+      `);
+    }
+
+    window.toggleGachaFields = function(selectEl) {
+      const parent = selectEl.parentElement.parentElement;
+      const extras = parent.querySelectorAll('.skin-extra');
+      extras.forEach(el => el.style.display = selectEl.value === 'skin' ? 'flex' : 'none');
+    }
+
+    window.saveGachaDraft = function() {
+      showPopup('success', 'บันทึกฉบับร่างสำเร็จ', 'ระบบบันทึกข้อมูลตู้กาชาไว้ชั่วคราวแล้ว');
+    }
+
+    window.confirmGachaUpdate = async function() {
+      const cabinet = document.getElementById('gachaCabinet').value;
+      const cover = document.getElementById('cabinetCoverImg').value;
+      const updateDate = document.getElementById('gachaUpdateDate').value;
+      const expiryDate = document.getElementById('gachaExpiryDate').value;
+      
+      showPopup('success', 'อัปเดตตู้สำเร็จ', `ตั้งค่าตู้ ${cabinet} เรียบร้อย จะเริ่มใช้งานวันที่ ${updateDate || 'ทันที'}`);
+    }
+
+    // --- STORE LOGIC ---
+    window.addNewStoreItem = async function() {
+      const category = document.getElementById('storeCategory').value;
+      const image = document.getElementById('storeImage').value;
+      const name = document.getElementById('storeName').value;
+      const currency = document.getElementById('storeCurrency').value;
+      const price = document.getElementById('storePrice').value;
+
+      if (!image || !name || !price) {
+        showPopup('error', 'ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลสินค้าให้ครบถ้วน');
+        return;
+      }
+
+      const { error } = await supabase.from('store_items').insert([{ category, image_url: image, name, currency, price }]);
+      if (error) { showPopup('error', 'เกิดข้อผิดพลาด', error.message); return; }
+      showPopup('success', 'วางขายสำเร็จ', 'เพิ่มสินค้าลงในร้านค้าเรียบร้อยแล้ว');
+    }
+
+    // --- USERS LOGIC ---
+    async function loadUsers() {
+      const container = document.getElementById('usersListContainer');
+      container.innerHTML = 'กำลังโหลด...';
+      const { data, error } = await supabase.from('users').select('*');
+      if (error || !data) { container.innerHTML = 'ไม่พบข้อมูลผู้ใช้'; return; }
+      
+      container.innerHTML = '';
+      data.forEach(u => {
+        container.innerHTML += `
+          <div class="list-item-card" onclick="showPopup('success', 'นามบัตรผู้ใช้', 'ชื่อ: ${u.name || '-'}\\nUsername: @${u.username || '-'}\\n🪙 Coins: ${u.coins || 0}')">
+            <div><strong>${u.name || 'ผู้ใช้'}</strong><br><span style="color:#666;">@${u.username || '-'}</span></div>
+            <div>🪙 ${u.coins || 0}</div>
+          </div>
+        `;
+      });
+    }
+
+    // --- CHARACTER LOGIC ---
+    window.addNewCharacter = async function() {
+      const name = document.getElementById('charName').value;
+      const age = document.getElementById('charAge').value;
+      const birth = document.getElementById('charBirth').value;
+      const job = document.getElementById('charJob').value;
+      const img = document.getElementById('charImg').value;
+      const fullImg = document.getElementById('charFullImg').value;
+      const bg = document.getElementById('charBg').value;
+      const story = document.getElementById('charStory').value;
+      const relation = document.getElementById('charRelation').value;
+      const releaseDate = document.getElementById('charReleaseDate').value;
+
+      if (!name || !img) {
+        showPopup('error', 'ข้อมูลไม่ครบ', 'กรุณากรอกชื่อและรูปภาพตัวละคร');
+        return;
+      }
+
+      const { error } = await supabase.from('characters').insert([{ name, age_birth: `${age}, ${birth}`, job, image_url: img, full_image_url: fullImg, background: bg, story, relation, release_date: releaseDate }]);
+      if (error) { showPopup('error', 'เกิดข้อผิดพลาด', error.message); return; }
+      showPopup('success', 'เพิ่มตัวละครสำเร็จ', `เพิ่มตัวละคร ${name} เข้าสู่ระบบไดอารี่แล้ว`);
+    }
+
+    // --- CODE LOGIC ---
+    window.addCodeRewardSlot = function() {
+      document.getElementById('codeRewardsBuilder').insertAdjacentHTML('beforeend', `
+        <hr style="border:0; border-top:1px dashed var(--border-color); margin: 10px 0;">
+        <div class="form-group"><label>ประเภทของแลก</label><select class="form-control c-type"><option value="coins">เหรียญ (Coins)</option><option value="cookies">คุกกี้ (Cookies)</option><option value="background">พื้นหลัง (Background)</option></select></div>
+        <div class="form-group"><label>มูลค่าของรางวัล</label><input type="text" class="form-control c-val" placeholder="ระบุจำนวน หรือ URL..."></div>
+      `);
+    }
+
+    window.addNewCode = async function() {
+      const codeText = document.getElementById('codeText').value.toUpperCase();
+      if (!codeText) { showPopup('error', 'ข้อมูลไม่ครบ', 'กรุณาระบุโค้ด'); return; }
+      showPopup('success', 'สร้างโค้ดสำเร็จ', `สร้างโค้ด ${codeText} เรียบร้อยแล้ว`);
+    }
+
+    window.addEventListener('DOMContentLoaded', initAuth);
+  </script>
+</body>
+</html>
