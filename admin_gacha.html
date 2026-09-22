@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>POCKET DIARY - Admin Gacha Management</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-pearl: #FDFBFB;
+      --bg-pearl-gradient: linear-gradient(135deg, #FFFFFF 0%, #EFECE6 100%);
+      --royal-black: #111111;
+      --royal-gold: #D4AF37;
+      --accent-gray: #555555;
+      --border-color: rgba(17, 17, 17, 0.15);
+      --shadow-luxury: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg-pearl-gradient);
+      color: var(--royal-black);
+    }
+
+    /* Top HUD */
+    .top-hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      padding: 0 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(253, 251, 251, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .back-btn {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--royal-black);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Main Container */
+    .main-container {
+      position: absolute;
+      top: 60px; bottom: 0; left: 0; right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      box-shadow: var(--shadow-luxury);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .admin-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .admin-header h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--royal-black);
+    }
+
+    .admin-header p {
+      font-size: 0.78rem;
+      color: var(--accent-gray);
+    }
+
+    .cabinet-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--royal-black);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 0.88rem;
+      outline: none;
+      background: #FFFFFF;
+      color: var(--royal-black);
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--royal-black);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(17,17,17,0.15);
+      margin-top: 6px;
+    }
+
+    .action-btn.secondary {
+      background: #EFECE6;
+      color: var(--royal-black);
+      box-shadow: none;
+    }
+
+    .gacha-slot-card {
+      background: #FAFAFA;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .remove-slot-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: #ff5252;
+      color: #fff;
+      border: none;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 0.75rem;
+    }
+
+    /* Popup Modal */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .popup-overlay.show { opacity: 1; pointer-events: auto; }
+    .popup-card {
+      background: #FFFFFF;
+      width: 85%; max-width: 340px;
+      border-radius: 24px;
+      padding: 25px 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top HUD -->
+  <header class="top-hud">
+    <a href="admin.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> เมนูหลัก</a>
+    <div style="font-weight: 700; font-size: 0.9rem;">⭐ Gacha Management</div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <div class="admin-header">
+      <h1>จัดการตู้กาชา</h1>
+      <p>เลือกตู้เพื่อตั้งค่าและอัปเดตของรางวัลล่วงหน้า</p>
+    </div>
+    
+    <div class="cabinet-grid">
+      <button class="action-btn secondary" onclick="selectCabinet('permanent')">ตู้ถาวร</button>
+      <button class="action-btn secondary" onclick="selectCabinet('old_season')">ตู้ซีซั่นเก่า</button>
+      <button class="action-btn secondary" onclick="selectCabinet('season')">ตู้ประจำฤดูกาล</button>
+      <button class="action-btn secondary" onclick="selectCabinet('monthly')">ตู้รายเดือน</button>
+    </div>
+    <button class="action-btn secondary" onclick="selectCabinet('character')">ตู้ตัวละครใหม่</button>
+
+    <div id="editorPanel" style="display:none; margin-top: 15px;">
+      <hr style="border:0; border-top:1px solid var(--border-color); margin: 15px 0;">
+      <div style="font-weight: 700; margin-bottom: 10px; font-size: 0.95rem;" id="cabinetTitle">กำลังจัดการตู้: -</div>
+      
+      <div class="form-group">
+        <label>เปลี่ยนรูปหน้าตู้ (Cloudinary URL)</label>
+        <input type="text" id="coverImgInput" class="form-control" placeholder="https://...">
+      </div>
+
+      <div id="lockNotice" style="font-size: 0.78rem; color: #d9534f; margin-bottom: 8px; display:none;">
+        * ตู้ถาวรตั้งค่าได้สมบูรณ์เพียงรอบแรกเท่านั้น หลังจากนี้จะถูกล็อคห้ามแก้ไขไอเท็มเดิม
+      </div>
+
+      <div id="oldSeasonNotice" style="font-size: 0.78rem; color: #555; margin-bottom: 8px; display:none;">
+        * ตู้ซีซั่นเก่า: ไม่สามารถลบของเดิมได้ ทำได้แค่เพิ่มรายการใหม่สะสมเรื่อยๆ
+      </div>
+
+      <label style="font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; display: block;">รายการไอเท็ม/สกินในตู้</label>
+      <div id="itemsBuilderContainer"></div>
+
+      <button class="action-btn secondary" id="addSlotBtn" onclick="addItemSlot()">+ เพิ่มไอเท็มเข้าตู้</button>
+
+      <div id="scheduleGroup" style="display:none; margin-top: 10px;">
+        <div class="form-group">
+          <label>วัน/เดือน/ปี ที่จะอัปเดตตู้แบบอัตโนมัติ</label>
+          <input type="date" id="scheduleDateInput" class="form-control">
+        </div>
+      </div>
+
+      <div id="expiryGroup" style="display:none; margin-top: 10px;">
+        <div class="form-group">
+          <label>วัน/เดือน/ปี ที่ตู้ตัวละครใหม่จะหายไป</label>
+          <input type="date" id="expiryDateInput" class="form-control">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 15px; padding-bottom: 30px;">
+        <button class="action-btn secondary" onclick="saveDraft()">💾 เซฟฉบับร่าง</button>
+        <button class="action-btn" onclick="confirmUpdateCabinet()">✔ ยืนยันการแก้ไขตู้</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Modal -->
+  <div class="popup-overlay" id="customPopup">
+    <div class="popup-card">
+      <div id="popupTitle" style="font-weight: 700; font-size: 1.05rem; margin-bottom: 6px;">แจ้งเตือน</div>
+      <div id="popupDesc" style="font-size: 0.82rem; color: var(--accent-gray); margin-bottom: 16px;">ดำเนินการเรียบร้อยแล้ว</div>
+      <button class="action-btn" onclick="closePopup()">ตกลง</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://ooozqddxvxeykwubumli.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xwsBeo4TJfLSwnQUiV2uSw_7GwLZd85';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentCabinet = '';
+    let existingCabinetData = null;
+
+    window.showPopup = function(title, desc) {
+      document.getElementById('popupTitle').textContent = title;
+      document.getElementById('popupDesc').textContent = desc;
+      document.getElementById('customPopup').classList.add('show');
+    }
+
+    window.closePopup = function() {
+      document.getElementById('customPopup').classList.remove('show');
+    }
+
+    function initAuth() {
+      const savedUser = sessionStorage.getItem('pocket_diary_user');
+      if (!savedUser) { window.location.href = 'index.html'; return; }
+      const user = JSON.parse(savedUser);
+      if (user.email !== 'ciiderydem@gmail.com') {
+        window.location.href = 'phone.html';
+      }
+    }
+
+    window.selectCabinet = async function(cabType) {
+      currentCabinet = cabType;
+      document.getElementById('editorPanel').style.display = 'block';
+      
+      const titles = {
+        permanent: 'ตู้ถาวร (Permanent)',
+        old_season: 'ตู้ซีซั่นเก่า (Old Season)',
+        season: 'ตู้ประจำฤดูกาล (Season)',
+        monthly: 'ตู้รายเดือน (Monthly)',
+        character: 'ตู้ตัวละครใหม่ (New Character)'
+      };
+      document.getElementById('cabinetTitle').textContent = 'กำลังจัดการ: ' + titles[cabType];
+
+      // โหลดข้อมูลเดิมจากฐานข้อมูลมารอไว้
+      const { data: cabInfo } = await supabase.from('gacha_cabinets').select('*').eq('pool_type', cabType).single();
+      existingCabinetData = cabInfo;
+      document.getElementById('coverImgInput').value = cabInfo?.cover_img || '';
+      if(cabInfo?.scheduled_date) document.getElementById('scheduleDateInput').value = cabInfo.scheduled_date;
+      if(cabInfo?.expiry_date) document.getElementById('expiryDateInput').value = cabInfo.expiry_date;
+
+      // จัดการการแสดงผล UI เงื่อนไขแต่ละตู้
+      document.getElementById('lockNotice').style.display = (cabType === 'permanent' && cabInfo?.is_locked) ? 'block' : 'none';
+      document.getElementById('oldSeasonNotice').style.display = (cabType === 'old_season') ? 'block' : 'none';
+      
+      const isTimed = (cabType === 'season' || cabType === 'monthly' || cabType === 'character');
+      document.getElementById('scheduleGroup').style.display = isTimed ? 'block' : 'none';
+      document.getElementById('expiryGroup').style.display = (cabType === 'character') ? 'block' : 'none';
+
+      // โหลดรายการไอเท็มเดิมในตู้
+      const container = document.getElementById('itemsBuilderContainer');
+      container.innerHTML = '';
+
+      const { data: items } = await supabase.from('gacha_pools').select('*').eq('pool_type', cabType);
+      if (items && items.length > 0) {
+        items.forEach(item => addItemSlot(item));
+      } else {
+        addItemSlot();
+      }
+    }
+
+    window.addItemSlot = function(data = null) {
+      if (currentCabinet === 'permanent' && existingCabinetData?.is_locked) {
+        window.showPopup('ล็อคการแก้ไข', 'ตู้ถาวรถูกล็อคเรียบร้อยแล้ว ไม่สามารถเพิ่ม/ลดไอเท็มได้อีก');
+        return;
+      }
+
+      const container = document.getElementById('itemsBuilderContainer');
+      const slotId = 'slot_' + Date.now() + Math.random().toString(36).substr(2, 4);
+      
+      const isLockedOldItem = (currentCabinet === 'old_season' && data !== null);
+
+      const slotHtml = `
+        <div class="gacha-slot-card" id="${slotId}" data-id="${data?.id || ''}">
+          ${isLockedOldItem ? '' : `<button class="remove-slot-btn" onclick="document.getElementById('${slotId}').remove()"><i class="fa-solid fa-minus"></i></button>`}
+          <div class="form-group">
+            <label>ประเภทไอเท็ม</label>
+            <select class="form-control slot-type" onchange="renderSlotFields('${slotId}')" ${isLockedOldItem ? 'disabled' : ''}>
+              <option value="skin" ${data?.type === 'skin' ? 'selected' : ''}>สกินตัวละคร</option>
+              <option value="background" ${data?.type === 'background' ? 'selected' : ''}>พื้นหลัง</option>
+              <option value="item" ${data?.type === 'item' ? 'selected' : ''}>ไอเทม</option>
+            </select>
+          </div>
+          <div class="slot-dynamic-fields"></div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', slotHtml);
+      renderSlotFields(slotId, data);
+    }
+
+    window.renderSlotFields = function(slotId, data = null) {
+      const slotEl = document.getElementById(slotId);
+      const type = slotEl.querySelector('.slot-type').value;
+      const fields = slotEl.querySelector('.slot-dynamic-fields');
+      const isLockedOldItem = (currentCabinet === 'old_season' && slotEl.getAttribute('data-id') !== '');
+
+      if (type === 'skin') {
+        fields.innerHTML = `
+          <div class="form-group"><label>ลิงก์รูปสกิน/ตอนสุ่ม (Cloudinary)</label><input type="text" class="form-control slot-img" value="${data?.image || ''}" placeholder="https://..." ${isLockedOldItem ? 'readonly' : ''}></div>
+          <div class="form-group"><label>ลิงก์รูปเต็มตัว (Cloudinary)</label><input type="text" class="form-control slot-fullimg" value="${data?.full_image || ''}" placeholder="https://..." ${isLockedOldItem ? 'readonly' : ''}></div>
+          <div class="form-group"><label>ชื่อตัวละคร & ระดับสกิน</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" class="form-control slot-name" value="${data?.name || ''}" placeholder="ชื่อตัวละคร" style="flex:2;" ${isLockedOldItem ? 'readonly' : ''}>
+              <select class="form-control slot-rank" style="flex:1;" ${isLockedOldItem ? 'disabled' : ''}>
+                <option value="B" ${data?.rank === 'B' ? 'selected' : ''}>B</option>
+                <option value="A" ${data?.rank === 'A' ? 'selected' : ''}>A</option>
+                <option value="S" ${data?.rank === 'S' ? 'selected' : ''}>S</option>
+                <option value="SR" ${data?.rank === 'SR' ? 'selected' : ''}>SR</option>
+                <option value="SSR" ${data?.rank === 'SSR' ? 'selected' : ''}>SSR</option>
+              </select>
+            </div>
+          </div>
+        `;
+      } else if (type === 'background') {
+        fields.innerHTML = `
+          <div class="form-group"><label>ลิงก์รูปพื้นหลัง (Cloudinary)</label><input type="text" class="form-control slot-img" value="${data?.image || ''}" placeholder="https://..." ${isLockedOldItem ? 'readonly' : ''}></div>
+        `;
+      } else if (type === 'item') {
+        fields.innerHTML = `
+          <div class="form-group"><label>ลิงก์รูปไอเทม (Cloudinary)</label><input type="text" class="form-control slot-img" value="${data?.image || ''}" placeholder="https://..." ${isLockedOldItem ? 'readonly' : ''}></div>
+          <div class="form-group"><label>ประเภทไอเทม</label><input type="text" class="form-control slot-itemtype" value="${data?.item_type || ''}" placeholder="ประเภทไอเทม..." ${isLockedOldItem ? 'readonly' : ''}></div>
+          <div class="form-group"><label>คุณสมบัติพิเศษ</label><input type="text" class="form-control slot-prop" value="${data?.property || ''}" placeholder="คุณสมบัติ..." ${isLockedOldItem ? 'readonly' : ''}></div>
+        `;
+      }
+    }
+
+    window.saveDraft = function() {
+      window.showPopup('บันทึกฉบับร่างสำเร็จ', 'ระบบบันทึกข้อมูลตู้กาชาชั่วคราวเรียบร้อยแล้ว');
+    }
+
+    window.confirmUpdateCabinet = async function() {
+      if (currentCabinet === 'permanent' && existingCabinetData?.is_locked) {
+        window.showPopup('ไม่สามารถแก้ไขได้', 'ตู้ถาวรถูกล็อคถาวรแล้ว');
+        return;
+      }
+
+      const coverImg = document.getElementById('coverImgInput').value;
+      const scheduledDate = document.getElementById('scheduleDateInput').value || null;
+      const expiryDate = document.getElementById('expiryDateInput').value || null;
+
+      // บันทึกการตั้งค่าตู้ (รูปหน้าตู้ และกำหนดเวลา) ลงตาราง gacha_cabinets
+      await supabase.from('gacha_cabinets').upsert({
+        pool_type: currentCabinet,
+        cover_img: coverImg,
+        scheduled_date: scheduledDate,
+        expiry_date: expiryDate,
+        is_locked: (currentCabinet === 'permanent' ? true : (existingCabinetData?.is_locked || false))
+      }, { onConflict: 'pool_type' });
+
+      // ดึงสล็อตทั้งหมดเพื่อบันทึกรายการไอเท็ม
+      const slots = document.querySelectorAll('.gacha-slot-card');
+      if (slots.length > 50 && currentCabinet !== 'old_season') {
+        window.showPopup('เกินจำนวนจำกัด', 'ตู้กาชาทั่วไปสามารถใส่ไอเท็มได้สูงสุด 50 ชิ้นเท่านั้น');
+        return;
+      }
+
+      // หากไม่ใช่ตู้ซีซั่นเก่า ให้ล้างของเดิมแล้วใส่ใหม่ตามหน้าแอดมิน
+      if (currentCabinet !== 'old_season') {
+        await supabase.from('gacha_pools').delete().eq('pool_type', currentCabinet);
+      }
+
+      for (const slot of slots) {
+        const slotId = slot.getAttribute('data-id');
+        // ถ้าเป็นตู้ซีซั่นเก่าและมี ID อยู่แล้ว (ของเก่า) ข้ามการ insert ซ้ำ
+        if (currentCabinet === 'old_season' && slotId) continue;
+
+        const type = slot.querySelector('.slot-type').value;
+        const image = slot.querySelector('.slot-img')?.value || '';
+        const fullImage = slot.querySelector('.slot-fullimg')?.value || '';
+        const name = slot.querySelector('.slot-name')?.value || (type === 'background' ? 'พื้นหลังพิเศษ' : 'ไอเท็มพิเศษ');
+        const rank = slot.querySelector('.slot-rank')?.value || 'B';
+        const itemType = slot.querySelector('.slot-itemtype')?.value || '';
+        const property = slot.querySelector('.slot-prop')?.value || '';
+
+        await supabase.from('gacha_pools').insert([{
+          pool_type: currentCabinet,
+          type,
+          image,
+          full_image: fullImage,
+          name,
+          rank,
+          item_type: itemType,
+          property
+        }]);
+
+        // ถ้าเป็นสกินตัวละคร ให้นำเข้าตาราง characters อัตโนมัติ เพื่อให้หน้า diary.html ดึงข้อมูลไปแสดงผลเชื่อมกันได้สมบูรณ์
+        if (type === 'skin' && name) {
+          await supabase.from('characters').upsert({
+            name,
+            image_url: image,
+            full_image_url: fullImage,
+            rank
+          }, { onConflict: 'name' });
+        }
+      }
+
+      window.showPopup('สำเร็จ', 'อัปเดตข้อมูลตู้กาชาและเชื่อมโยงระบบไดอารี่เรียบร้อยแล้ว!');
+      selectCabinet(currentCabinet);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initAuth();
+    });
+  </script>
+</body>
+</html>
